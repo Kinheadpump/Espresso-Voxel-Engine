@@ -1,10 +1,12 @@
 mod block;
 mod coords;
 mod direction;
+mod textures;
 
 pub use block::BlockId;
 pub use coords::{ChunkPos, LocalPos};
 pub use direction::{Axis, FaceDir};
+pub use textures::{BlockFaces, TextureLayer, block_face_table};
 
 pub const CHUNK_SIZE: usize = 32;
 pub const CHUNK_SIZE_I32: i32 = CHUNK_SIZE as i32;

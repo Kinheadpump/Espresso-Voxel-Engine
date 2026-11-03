@@ -13,6 +13,7 @@ One fact has one home. Other docs link to it instead of copying it, so a number 
 | How the engine works today | `docs/ARCHITECTURE.md` | Describes the code at `main`, not plans |
 | Design choices with alternatives | `docs/DECISIONS.md` | Append-only ADRs (section 5) |
 | What we do next, in order | `docs/ROADMAP.md` | Numbered items, each with its verification |
+| Sprints, their exit gates, long-term targets | `docs/SPRINTS.md` | One section per sprint; targets labelled **target** |
 | Ideas not yet scheduled, ranked | `docs/BACKLOG.md` | `B-nn` items (section 6) |
 | How to measure | `docs/BENCHMARKING.md` | Procedure and rules |
 | Measured results | `docs/PERFORMANCE.md` | Tables with date, machine, command, commit |

@@ -18,7 +18,7 @@ A performance-first blocky voxel engine in Rust on wgpu. It is the third attempt
 | `tools/legacy-compare` | Standalone crate: Decaf and Lemon meshers vs ours on identical input (not a workspace member) | vx-core, vx-world, vx-mesh |
 | `scripts/` | `bench-baseline.sh` / `.ps1` hardware baseline runs | |
 | `benchmarks/baselines/` | Committed reference runs per machine (`results/` is git-ignored scratch) | |
-| `docs/` | Architecture, decisions (ADRs), roadmap, ranked backlog, benchmarking guide, performance log, history, research. Where each kind of fact lives: `docs/DOC-GUIDELINES.md` §1 | |
+| `docs/` | Architecture, decisions (ADRs), roadmap, sprint plan, ranked backlog, benchmarking guide, performance log, history, research. Where each kind of fact lives: `docs/DOC-GUIDELINES.md` §1 | |
 
 Rule: `vx-core`, `vx-world` and `vx-mesh` never depend on wgpu or winit, so CPU benches compile fast and run anywhere.
 

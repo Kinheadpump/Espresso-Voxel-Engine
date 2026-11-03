@@ -11,7 +11,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use vx_render::{CameraUniform, ChunkMeshRef, GpuContext, TerrainRenderer};
+use vx_render::{CameraUniform, ChunkMeshRef, GpuContext, Shading, TerrainRenderer};
 use vx_world::{TerrainGenerator, TerrainSettings};
 
 pub use compare::compare;
@@ -29,6 +29,7 @@ pub struct BenchOptions {
     pub threads: u32,
     pub width: u32,
     pub height: u32,
+    pub shading: Shading,
     pub out: Option<PathBuf>,
 }
 
@@ -42,6 +43,7 @@ impl BenchOptions {
             threads: std::thread::available_parallelism().map_or(1, |n| n.get() as u32),
             width: 1920,
             height: 1080,
+            shading: Shading::Textured,
             out: None,
         }
     }
@@ -77,7 +79,12 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     let (region, generation_ms, meshing_ms) = measure_region(options, terrain_settings, &pool)?;
     let process_resident_mib = report::process_resident_mib();
 
-    let mut terrain = TerrainRenderer::new(&gpu.device, vx_render::OffscreenTarget::FORMAT);
+    let mut terrain = TerrainRenderer::new(
+        &gpu.device,
+        &gpu.queue,
+        vx_render::OffscreenTarget::FORMAT,
+        options.shading,
+    )?;
     let upload_ms = measure_upload(options, &gpu, &mut terrain, &region);
 
     log::info!(
@@ -88,17 +95,7 @@ pub fn run(options: &BenchOptions) -> Result<()> {
         options.width,
         options.height
     );
-    let cameras = frames::path_cameras(options, &TerrainGenerator::new(terrain_settings));
-    let frames = frames::measure(options, &gpu, &terrain, &cameras);
-
-    log::info!("visibility: culling ladder over {VISIBILITY_SAMPLES} path frames");
-    let visibility = visibility::measure(
-        &gpu,
-        &terrain,
-        &visibility::ChunkDrawTable::new(region.meshes.iter().map(|(pos, mesh)| (*pos, mesh))),
-        &sampled_path_cameras(&cameras[options.warmup_frames as usize..]),
-        (options.width, options.height),
-    );
+    let (frames, visibility) = measure_path(options, &gpu, &terrain, &region);
 
     let report = BenchReport {
         schema: report::SCHEMA_VERSION,
@@ -129,6 +126,15 @@ pub fn run(options: &BenchOptions) -> Result<()> {
             voxel_heap_bytes: region.voxel_heap_bytes,
             geometry_buffer_bytes: terrain.geometry_buffer_bytes(),
             draws: terrain.draw_count(),
+            shading: terrain.shading().name().into(),
+            texture_bytes: match terrain.shading() {
+                Shading::Flat => 0,
+                Shading::Textured => terrain.texture_bytes(),
+            },
+            texture_hash: match terrain.shading() {
+                Shading::Flat => String::new(),
+                Shading::Textured => format!("{:016x}", terrain.texture_hash()),
+            },
         },
         results: Results {
             world_generation_ms: Metric::from_single_samples("ms", &generation_ms),
@@ -154,6 +160,26 @@ pub fn run(options: &BenchOptions) -> Result<()> {
 }
 
 const VISIBILITY_SAMPLES: usize = 24;
+
+fn measure_path(
+    options: &BenchOptions,
+    gpu: &GpuContext,
+    terrain: &TerrainRenderer,
+    region: &MeshedRegion,
+) -> (frames::FrameMicros, visibility::VisibilityCounters) {
+    let generator = TerrainGenerator::new(options.scenario.terrain_settings());
+    let cameras = frames::path_cameras(options, &generator);
+    let frames = frames::measure(options, gpu, terrain, &cameras);
+    log::info!("visibility: culling ladder over {VISIBILITY_SAMPLES} path frames");
+    let visibility = visibility::measure(
+        gpu,
+        terrain,
+        &visibility::ChunkDrawTable::new(region.meshes.iter().map(|(pos, mesh)| (*pos, mesh))),
+        &sampled_path_cameras(&cameras[options.warmup_frames as usize..]),
+        (options.width, options.height),
+    );
+    (frames, visibility)
+}
 
 fn sampled_path_cameras(measured: &[CameraUniform]) -> Vec<CameraUniform> {
     let stride = measured.len().div_ceil(VISIBILITY_SAMPLES).max(1);

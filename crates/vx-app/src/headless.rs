@@ -25,7 +25,12 @@ pub fn screenshot(options: &Options, path: &Path) -> Result<()> {
     let region = region::build_region(options.view_radius, terrain_settings);
     region.log_summary();
 
-    let mut terrain = TerrainRenderer::new(&gpu.device, OffscreenTarget::FORMAT);
+    let mut terrain = TerrainRenderer::new(
+        &gpu.device,
+        &gpu.queue,
+        OffscreenTarget::FORMAT,
+        options.shading,
+    )?;
     terrain.upload_static(
         &gpu.device,
         region
