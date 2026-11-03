@@ -139,6 +139,14 @@ Run both on the same machine and session, back to back, with the same settings. 
 
 Never put Tracy-on numbers into a baseline or Stats section: the zones cost real time per call.
 
+## Instruction-count benches (CI regression signal)
+
+`cargo bench-instr` runs `crates/vx-instr/benches/instructions.rs` under Callgrind via gungraun: mesher (surface and checkerboard chunks), generation of one surface chunk, palette decode and padded gather. It needs Valgrind and `cargo install gungraun-runner --version 0.20.0 --locked`. Instruction counts do not depend on load, so they work on shared CI runners where wall-clock spread is 12–28% (measured, cloud VM).
+
+The CI job `instruction-counts` saves a baseline on the PR's base commit, then runs the PR head with `--baseline=base --callgrind-limits='ir=1%'` and fails on any benchmark whose instruction count (`Ir`) grows by more than 1%. Locally: `cargo bench-instr -- --save-baseline=before`, change the code, `cargo bench-instr -- --baseline=before`.
+
+Two back-to-back runs on the same build gave identical counts (measured 2026-11-03, cloud container, Xeon @ 2.1 GHz, Valgrind 3.22). A deliberate doubling of the mesher work was caught (+98% `Ir`, exit code 3). Counts are a proxy: they miss cache and memory-bound effects, so a speed-up still needs a `vx bench` number.
+
 ## Reporting rules
 
 Labels (**measured**, **quoted**, **computed**, **estimate**, **target**) and how to write them: `docs/DOC-GUIDELINES.md` §4. The two rules specific to benchmarks:
