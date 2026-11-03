@@ -292,6 +292,23 @@ Findings:
 - Screenshots with validation on and off are byte-identical on the RTX 2060 (`default` 0.1, `cave` 0.4, `far` 0.3, SHA-256) and on lavapipe.
 - Decision: off in release, ADR-0015. The `noah-msi-rtx2060` baseline above ran with it on; compare against it with `--indirect-validation on`.
 
+## Sprint S2 gate: `noah-msi-rtx2060` (2026-11-03)
+
+Base `6b20c4e` (`main`, S2 start) against candidate `62aa6a6` (B-03 padded decode, per-width decode unrolling, column-shared height noise), both clean release builds at 32³, offscreen, flat shading, Vulkan 616.92. Data and logs in `benchmarks/baselines/noah-msi-rtx2060/sprint-S2-gate/`. Content is identical: `default` hash `fab6872fe1853d8e` (6,125 generated, 2,826 meshed, 986,380 quads, 9,492 draws), `far` hash `4229b10348a4dc42` (22,445 generated, 36,275 draws).
+
+### `vx bench-compare` base → candidate (measured; median of repeat medians, noise band in brackets)
+
+| Metric | `default` run 1 | `default` run 2 | `far` |
+|---|---|---|---|
+| World generation | 152.4 → 73.5 ms, −51.8% (9.0%) FASTER | 160.3 → 70.6 ms, −56.0% (8.8%) FASTER | 609.7 → 270.2 ms, −55.7% (4.2%) FASTER |
+| Meshing | 59.4 → 54.9 ms, −7.6% (8.3%) within noise | 61.1 → 52.3 ms, −14.5% (3.5%) FASTER | 246.8 → 210.0 ms, −14.9% (7.7%) FASTER |
+| Upload | within noise | within noise | within noise |
+| Frame CPU encode | within noise | within noise | within noise |
+| Frame GPU terrain pass | 504.5 → 508.4 µs, within noise | 511.8 → 512.2 µs, within noise | 1,778.9 → 1,793.1 µs, within noise |
+| Frame wall | 932.5 → 923.5 µs, within noise | 934.7 → 945.2 µs, within noise | 2,219.1 → 2,231.5 µs, within noise |
+
+Gate reading: world generation at `default` is at most half the S2 start (−51.8% and −56.0%, both runs) and `mesh_hash` is unchanged, so that gate passes. Meshing at `far` is faster on two agreeing runs (`far` and `default` run 2; `default` run 1 is inside its noise band). Frame metrics are unaffected, as expected for CPU-side work. Meshing at `default` is 52.3–54.9 ms, under the 80 ms long-term target (measured). SIMD noise (scope 4) is not in this run.
+
 ## Cloud VM reference (2026-11-03)
 
 - **Machine:** Intel Xeon @ 2.30 GHz VM, 4 vCPUs, 16 GiB, Ubuntu 24.04, rustc 1.97.1, no RUSTFLAGS.
