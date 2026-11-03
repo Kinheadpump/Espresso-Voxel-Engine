@@ -9,13 +9,13 @@ Format and labels follow `docs/DOC-GUIDELINES.md`: numbers are **measured**, **q
 Ranked by expected gain on the core goal (view distance and frame time) per unit of effort, with prerequisites first. Since 2026-11-03 the ranking can lean on the first hardware baseline (`noah-msi-rtx2060`, details in `docs/PERFORMANCE.md`). What it shows, all measured, `default` scenario unless noted:
 
 - The GPU is far from busy: terrain pass ~0.52 ms, frame wall ~1.25–1.30 ms. In `far` the terrain pass is ~1.94–1.98 ms.
-- Frame CPU encode grows with draw count although the renderer issues one `multi_draw_indirect` call: 171–182 µs (`small`, 2,506 draws), 480–497 µs (`default`, 9,492 draws), 1.34–1.74 ms (`far`, 36,275 draws). That is about 40–70 ns per draw (computed). See B-02.
+- Frame CPU encode grows with draw count although the renderer issues one `multi_draw_indirect` call: 171–182 µs (`small`, 2,506 draws), 480–497 µs (`default`, 9,492 draws), 1.34–1.74 ms (`far`, 36,275 draws). That is about 40–70 ns per draw (computed). Explained and fixed, see B-02.
 - World generation (~260–267 ms) costs about 2.5× meshing (~103–110 ms) on 12 threads, so generation, not meshing, dominates region build time.
 
 | Rank | Id | Item | Origin | Effort | Expected benefit (label) | Decided by |
 |---|---|---|---|---|---|---|
 | 1 | B-01 | Occlusion counters and `cave` / `mountain` / `fly-fast` scenarios | R-01 | S | None by itself; makes B-05, B-06 and Hi-Z comparable | Prerequisite; correctness = culling-off image identity |
-| 2 | B-02 | Find why frame CPU encode scales with draw count | own finding from the baseline | S | Up to ~1.3–1.7 ms CPU per frame at `far` (measured cost; saving unknown) | encode µs vs draws across `small`/`default`/`far` |
+| 2 | B-02 | ~~Find why frame CPU encode scales with draw count~~ Done: wgpu indirect validation, off in release (ADR-0015) | own finding from the baseline | S | −1.1 ms CPU per frame at `far` (computed from measured medians) | encode µs vs draws across `small`/`default`/`far` |
 | 3 | B-03 | Decode straight into the padded mesher input | P-01 | S–M | Up to ~40% more meshed chunks/s (estimate) | divan `gather_and_mesh_surface_chunk`, meshing ms |
 | 4 | B-04 | Streaming rules: forward-frustum priority, teleport boost, slot-epoch staleness, retire-frame frees | R-08 | M | Fixes pop-in order and wasted jobs (quoted, qualitative) | time-to-fill-view, wasted-job %, frame p99 while flying |
 | 5 | B-05 | Upload time budget and suballocated buffers | P-05 | M | No frame spikes while streaming (quoted, qualitative) | frame p99 and max while flying, upload ms per frame |
@@ -67,6 +67,8 @@ Why this order:
 ## B-02 Frame CPU encode scales with draw count
 
 **Origin:** own finding from the `noah-msi-rtx2060` baseline (2026-11-03).
+
+**Status (2026-11-03): found and fixed.** Cause: wgpu 30 keeps `VALIDATION_INDIRECT_CALL` on in release, and `multi_draw_indirect` then runs `DrawBatcher::add` once per draw on the CPU (wgpu-core `command/render.rs`, read in source [S]). With it off, frame CPU record drops 81% at `default` and 94% at `far` with the GPU terrain pass within noise (measured, `docs/PERFORMANCE.md`). Decision in ADR-0015. Per-draw slope with validation on: ~30 ns per draw (computed from record 147 µs at 2,506 draws and 1,166 µs at 36,275 draws).
 
 **Now (measured, RTX 2060, Vulkan, median of repeat medians, run 1 / run 2):**
 

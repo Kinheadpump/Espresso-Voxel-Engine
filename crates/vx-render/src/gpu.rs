@@ -25,6 +25,32 @@ pub struct GpuContext {
     pub timestamps: bool,
 }
 
+/// wgpu's per-draw check of indirect arguments (`InstanceFlags::VALIDATION_INDIRECT_CALL`).
+/// Off in release builds (ADR-0015): sound because `TerrainRenderer` builds every argument in range.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IndirectValidation {
+    On,
+    Off,
+}
+
+impl IndirectValidation {
+    pub fn for_build() -> Self {
+        if cfg!(debug_assertions) {
+            Self::On
+        } else {
+            Self::Off
+        }
+    }
+
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "on" => Some(Self::On),
+            "off" => Some(Self::Off),
+            _ => None,
+        }
+    }
+}
+
 const REQUIRED_FEATURES: wgpu::Features = wgpu::Features::INDIRECT_FIRST_INSTANCE;
 const OPTIONAL_FEATURES: wgpu::Features = wgpu::Features::MULTI_DRAW_INDIRECT_COUNT
     .union(wgpu::Features::TIMESTAMP_QUERY)
@@ -33,8 +59,23 @@ const OPTIONAL_FEATURES: wgpu::Features = wgpu::Features::MULTI_DRAW_INDIRECT_CO
 
 impl GpuContext {
     pub fn create_instance() -> wgpu::Instance {
+        Self::create_instance_with(IndirectValidation::for_build())
+    }
+
+    /// With validation off, D3D12 is excluded: it would drop `first_vertex`/`first_instance`
+    /// from the vertex builtins that the terrain shader relies on.
+    pub fn create_instance_with(indirect_validation: IndirectValidation) -> wgpu::Instance {
+        let validate = indirect_validation == IndirectValidation::On;
+        let mut flags = wgpu::InstanceFlags::from_build_config();
+        flags.set(wgpu::InstanceFlags::VALIDATION_INDIRECT_CALL, validate);
+        let backends = if validate {
+            wgpu::Backends::PRIMARY
+        } else {
+            wgpu::Backends::PRIMARY.difference(wgpu::Backends::DX12)
+        };
         wgpu::Instance::new(wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::PRIMARY,
+            backends,
+            flags,
             ..wgpu::InstanceDescriptor::new_without_display_handle()
         })
     }

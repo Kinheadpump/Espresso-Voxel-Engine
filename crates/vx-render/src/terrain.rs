@@ -146,6 +146,10 @@ impl TerrainRenderer {
             self.geometry = None;
             return;
         }
+        debug_assert!(
+            draws_within(&draws, quads.len(), origins.len()),
+            "indirect draw arguments out of range: unsound with wgpu indirect validation off"
+        );
         let quad_buffer = storage_buffer(device, "terrain_quads", bytemuck::cast_slice(&quads));
         let origin_buffer = storage_buffer(device, "chunk_origins", bytemuck::cast_slice(&origins));
         let indirect = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -233,6 +237,15 @@ impl TerrainRenderer {
     pub(crate) fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
         &self.bind_group_layout
     }
+}
+
+fn draws_within(draws: &[DrawIndirectArgs], quad_count: usize, slot_count: usize) -> bool {
+    let vertex_limit = quad_count as u64 * u64::from(VERTICES_PER_QUAD);
+    draws.iter().all(|draw| {
+        u64::from(draw.first_vertex) + u64::from(draw.vertex_count) <= vertex_limit
+            && (draw.first_instance as usize) < slot_count
+            && draw.instance_count == 1
+    })
 }
 
 fn push_direction_draw(
@@ -375,6 +388,21 @@ pub(crate) fn create_terrain_pipeline(
 
 #[cfg(test)]
 mod tests {
+    use super::{DrawIndirectArgs, draws_within};
+
+    #[test]
+    fn draw_range_check_rejects_out_of_range_arguments() {
+        let draw = |first_vertex, vertex_count, first_instance| DrawIndirectArgs {
+            vertex_count,
+            instance_count: 1,
+            first_vertex,
+            first_instance,
+        };
+        assert!(draws_within(&[draw(0, 12, 0), draw(12, 6, 1)], 3, 2));
+        assert!(!draws_within(&[draw(12, 12, 0)], 3, 2));
+        assert!(!draws_within(&[draw(0, 6, 2)], 3, 2));
+    }
+
     #[test]
     fn terrain_shader_parses_and_validates() {
         let module = naga::front::wgsl::parse_str(crate::TERRAIN_SHADER).expect("WGSL parses");

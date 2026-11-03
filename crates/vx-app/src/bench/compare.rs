@@ -24,6 +24,8 @@ fn timing_metrics(report: &BenchReport) -> Vec<(&'static str, Option<&Metric>)> 
         ("meshing", Some(&results.meshing_ms)),
         ("upload", Some(&results.upload_ms)),
         ("frame CPU encode", Some(&results.frame_cpu_encode_us)),
+        ("  of which record", results.frame_cpu_record_us.as_ref()),
+        ("  of which submit", results.frame_cpu_submit_us.as_ref()),
         (
             "frame GPU terrain pass",
             results.frame_gpu_terrain_pass_us.as_ref(),
@@ -116,6 +118,10 @@ fn print_culling_ladder(visibility: &VisibilityCounters) {
     }
 }
 
+fn on_off(enabled: bool) -> &'static str {
+    if enabled { "on" } else { "off" }
+}
+
 fn or_none(value: &str) -> &str {
     if value.is_empty() { "none" } else { value }
 }
@@ -133,6 +139,13 @@ fn comparability_warnings(baseline: &BenchReport, candidate: &BenchReport) -> Ve
             candidate.content.shading,
             or_none(&baseline.content.texture_hash),
             or_none(&candidate.content.texture_hash),
+        ));
+    }
+    if baseline.content.indirect_validation != candidate.content.indirect_validation {
+        warnings.push(format!(
+            "wgpu indirect validation differs ({} -> {}): CPU and GPU frame costs include that switch",
+            on_off(baseline.content.indirect_validation),
+            on_off(candidate.content.indirect_validation),
         ));
     }
     if !baseline.content.same_geometry(&candidate.content) {

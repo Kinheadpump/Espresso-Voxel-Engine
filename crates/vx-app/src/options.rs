@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 
-use vx_render::Shading;
+use vx_render::{IndirectValidation, Shading};
 
 use crate::bench::{BenchOptions, Scenario};
 
@@ -24,6 +24,7 @@ pub struct Options {
     pub vsync: bool,
     pub shading: Shading,
     pub screenshot_view: Option<ScenarioView>,
+    pub indirect_validation: IndirectValidation,
 }
 
 #[derive(Clone, Copy)]
@@ -36,9 +37,10 @@ const USAGE: &str = "usage:
   vx [--radius <chunks>] [--vsync] [--shading flat|textured]   windowed fly-cam
   vx --probe                                       print adapter, tier, features
   vx --screenshot <file.png> [--radius <chunks>] [--shading flat|textured]
-     [--scenario <name> [--at 0..1]]               ... from a bench scenario's camera path
+     [--scenario <name> [--at 0..1]] [--indirect-validation on|off]
   vx bench [--scenario small|default|far|cave|mountain|fly-fast] [--repeats N] [--frames N] [--warmup N]
-           [--threads N] [--resolution WxH] [--shading flat|textured] [--out <file.json>]
+           [--threads N] [--resolution WxH] [--shading flat|textured]
+           [--indirect-validation on|off] [--out <file.json>]
   vx bench-compare <baseline.json> <candidate.json> [--allow-shading-change]";
 
 fn next_value<T: std::str::FromStr>(
@@ -60,6 +62,7 @@ impl Options {
             vsync: false,
             shading: Shading::Textured,
             screenshot_view: None,
+            indirect_validation: IndirectValidation::for_build(),
         };
         let mut pending = Vec::new();
         match args.next().as_deref() {
@@ -99,6 +102,9 @@ impl Options {
                 "--radius" => options.view_radius = next_value(&mut args, &arg)?,
                 "--vsync" => options.vsync = true,
                 "--shading" => options.shading = parse_shading(&mut args, &arg)?,
+                "--indirect-validation" => {
+                    options.indirect_validation = parse_indirect_validation(&mut args, &arg)?;
+                }
                 "--scenario" => {
                     let name: String = next_value(&mut args, &arg)?;
                     let scenario = parse_scenario(&name)?;
@@ -129,6 +135,15 @@ fn parse_scenario(name: &str) -> Result<Scenario> {
         .with_context(|| format!("unknown scenario {name:?}, expected {}", Scenario::NAMES))
 }
 
+fn parse_indirect_validation(
+    args: &mut impl Iterator<Item = String>,
+    flag: &str,
+) -> Result<IndirectValidation> {
+    let name: String = next_value(args, flag)?;
+    IndirectValidation::from_name(&name)
+        .with_context(|| format!("expected on|off for {flag}, got {name:?}"))
+}
+
 fn parse_shading(args: &mut impl Iterator<Item = String>, flag: &str) -> Result<Shading> {
     let name: String = next_value(args, flag)?;
     Shading::from_name(&name).with_context(|| format!("unknown shading {name:?}\n{USAGE}"))
@@ -141,7 +156,7 @@ fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
         match arg.as_str() {
             "--scenario" => {
                 let name: String = next_value(&mut args, &arg)?;
-                bench = BenchOptions::for_scenario(parse_scenario(&name)?);
+                bench.scenario = parse_scenario(&name)?;
             }
             "--repeats" | "--frames" | "--warmup" | "--threads" => {
                 overrides.push((arg.clone(), next_value::<u32>(&mut args, &arg)?));
@@ -153,6 +168,9 @@ fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
                 bench.height = height.parse().context(USAGE)?;
             }
             "--shading" => bench.shading = parse_shading(&mut args, &arg)?,
+            "--indirect-validation" => {
+                bench.indirect_validation = parse_indirect_validation(&mut args, &arg)?;
+            }
             "--out" => bench.out = Some(next_value::<String>(&mut args, &arg)?.into()),
             _ => bail!("unknown bench argument {arg:?}\n{USAGE}"),
         }

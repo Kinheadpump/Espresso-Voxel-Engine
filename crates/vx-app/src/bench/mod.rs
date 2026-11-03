@@ -11,7 +11,9 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use vx_render::{CameraUniform, ChunkMeshRef, GpuContext, Shading, TerrainRenderer};
+use vx_render::{
+    CameraUniform, ChunkMeshRef, GpuContext, IndirectValidation, Shading, TerrainRenderer,
+};
 use vx_world::{TerrainGenerator, TerrainSettings};
 
 pub use compare::compare;
@@ -30,6 +32,7 @@ pub struct BenchOptions {
     pub width: u32,
     pub height: u32,
     pub shading: Shading,
+    pub indirect_validation: IndirectValidation,
     pub out: Option<PathBuf>,
 }
 
@@ -44,6 +47,7 @@ impl BenchOptions {
             width: 1920,
             height: 1080,
             shading: Shading::Flat,
+            indirect_validation: IndirectValidation::for_build(),
             out: None,
         }
     }
@@ -59,7 +63,10 @@ pub fn run(options: &BenchOptions) -> Result<()> {
         log::warn!("DEBUG BUILD: results are not comparable; use `cargo run --release -- bench`");
     }
     let terrain_settings = options.scenario.terrain_settings();
-    let gpu = pollster::block_on(GpuContext::new(GpuContext::create_instance(), None))?;
+    let gpu = pollster::block_on(GpuContext::new(
+        GpuContext::create_instance_with(options.indirect_validation),
+        None,
+    ))?;
     let gpu_info = GpuInfo::of(&gpu);
     if gpu_info.is_software() {
         log::warn!(
@@ -118,29 +125,14 @@ pub fn run(options: &BenchOptions) -> Result<()> {
             repeats: options.repeats,
             frame_sync: "offscreen, CPU waits for GPU completion every frame".into(),
         },
-        content: ContentInfo {
-            chunks_generated: region.generated_chunks,
-            chunks_meshed: region.meshes.len(),
-            quads: region.quad_count(),
-            mesh_hash: format!("{:016x}", region.content_hash()),
-            voxel_heap_bytes: region.voxel_heap_bytes,
-            geometry_buffer_bytes: terrain.geometry_buffer_bytes(),
-            draws: terrain.draw_count(),
-            shading: terrain.shading().name().into(),
-            texture_bytes: match terrain.shading() {
-                Shading::Flat => 0,
-                Shading::Textured => terrain.texture_bytes(),
-            },
-            texture_hash: match terrain.shading() {
-                Shading::Flat => String::new(),
-                Shading::Textured => format!("{:016x}", terrain.texture_hash()),
-            },
-        },
+        content: content_info(options, &region, &terrain),
         results: Results {
             world_generation_ms: Metric::from_single_samples("ms", &generation_ms),
             meshing_ms: Metric::from_single_samples("ms", &meshing_ms),
             upload_ms: Metric::from_single_samples("ms", &upload_ms),
             frame_cpu_encode_us: Metric::from_repeats("us", &frames.cpu_encode),
+            frame_cpu_record_us: Some(Metric::from_repeats("us", &frames.cpu_record)),
+            frame_cpu_submit_us: Some(Metric::from_repeats("us", &frames.cpu_submit)),
             frame_gpu_terrain_pass_us: frames
                 .gpu_pass
                 .map(|repeats| Metric::from_repeats("us", &repeats)),
@@ -157,6 +149,32 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     compare::print_report(&report);
     println!("\nwrote {}", path.display());
     Ok(())
+}
+
+fn content_info(
+    options: &BenchOptions,
+    region: &MeshedRegion,
+    terrain: &TerrainRenderer,
+) -> ContentInfo {
+    ContentInfo {
+        chunks_generated: region.generated_chunks,
+        chunks_meshed: region.meshes.len(),
+        quads: region.quad_count(),
+        mesh_hash: format!("{:016x}", region.content_hash()),
+        voxel_heap_bytes: region.voxel_heap_bytes,
+        geometry_buffer_bytes: terrain.geometry_buffer_bytes(),
+        draws: terrain.draw_count(),
+        shading: terrain.shading().name().into(),
+        texture_bytes: match terrain.shading() {
+            Shading::Flat => 0,
+            Shading::Textured => terrain.texture_bytes(),
+        },
+        texture_hash: match terrain.shading() {
+            Shading::Flat => String::new(),
+            Shading::Textured => format!("{:016x}", terrain.texture_hash()),
+        },
+        indirect_validation: options.indirect_validation == IndirectValidation::On,
+    }
 }
 
 const VISIBILITY_SAMPLES: usize = 24;

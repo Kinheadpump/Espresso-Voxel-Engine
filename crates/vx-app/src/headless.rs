@@ -16,7 +16,10 @@ pub fn probe() -> Result<()> {
 pub fn screenshot(options: &Options, path: &Path) -> Result<()> {
     const WIDTH: u32 = 1280;
     const HEIGHT: u32 = 720;
-    let gpu = pollster::block_on(GpuContext::new(GpuContext::create_instance(), None))?;
+    let gpu = pollster::block_on(GpuContext::new(
+        GpuContext::create_instance_with(options.indirect_validation),
+        None,
+    ))?;
     let terrain_settings = options
         .screenshot_view
         .map_or_else(TerrainSettings::default, |view| {
