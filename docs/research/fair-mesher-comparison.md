@@ -1,5 +1,7 @@
 # Fair mesher comparison: Decaf vs Lemon vs Espresso
 
+> Snapshot, 2026-11-03. QUOTED = **quoted** in `docs/DOC-GUIDELINES.md` terms. The summary table lives in `docs/PERFORMANCE.md`.
+
 Same input bytes, same machine, same build profile, single thread. Replaces earlier cross-input numbers.
 Everything in "Measured" was produced by `tools/legacy-compare` (see reproduce command). Items labelled
 **QUOTED** come from the audit docs and were NOT re-measured here.

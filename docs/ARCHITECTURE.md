@@ -1,6 +1,6 @@
 # Architecture
 
-Status as of 2026-11-03: a vertical slice. A fixed region is generated and meshed on rayon workers, then drawn from one storage buffer with `multi_draw_indirect`. Streaming, GPU culling, editing and lighting are roadmap items (`docs/ROADMAP.md`).
+How the engine works at `main`, as of 2026-11-03: a vertical slice. A fixed region is generated and meshed on rayon workers, then drawn from one storage buffer with `multi_draw_indirect`. Streaming, GPU culling, editing and lighting are roadmap items (`docs/ROADMAP.md`).
 
 ## Data flow
 
@@ -27,7 +27,7 @@ multi_draw_indirect (one call for the whole world)
 
 - Chunks are 32³. `Uniform` chunks (all air, all stone) have no heap allocation.
 - `Packed` chunks hold a palette and power-of-two bit widths (1, 2, 4, 8, 16) so an index never straddles a `u64`. A palette that outgrows its width doubles the width.
-- Measured: radius-32 region (22,445 chunks) uses 58.6 MiB of voxel heap. The same chunks in Lemon's fixed `u16` layout would take 1.37 GiB, and 2.74 GiB in Decaf's `u32` layout.
+- The radius-32 region (22,445 chunks) uses 58.6 MiB of voxel heap (measured, `docs/PERFORMANCE.md`). The same chunks would take 1.37 GiB in Lemon's fixed `u16` layout and 2.74 GiB in Decaf's `u32` layout (computed).
 
 ## Meshing (`vx-mesh/src/binary_greedy.rs`)
 

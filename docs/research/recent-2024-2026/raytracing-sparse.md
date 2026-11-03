@@ -1,5 +1,7 @@
 # Ray tracing / sparse structures / lighting built on them (Espresso)
 
+> Snapshot, 2026-11-03. Tags [S] and [U] and the number labels as in `docs/DOC-GUIDELINES.md` §4. Ranked candidates from this report are in `docs/BACKLOG.md`.
+
 Tags: [S] verified from a page fetched this session (URL given), [U] background knowledge / unverified. Numbers are "quoted" unless marked "estimate".
 
 Judging rule: CLAUDE.md says screen-space approximations first; world-space tracing only if measurements say so. Espresso is a mesh-rasterised blocky world with a greedy mesher, so most ray-traced structures are a SECOND representation next to the mesh. Cost of keeping two representations is the main argument against almost everything below, except the cheap one (occupancy bitmask volume).

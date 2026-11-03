@@ -1,5 +1,7 @@
 # Decaf-Voxel-Engine audit
 
+> Snapshot of Decaf at its last commit, written 2026-11-03. Numbers measured here were measured on the cloud VM against Decaf's code; elsewhere in the repo they count as **quoted** from this audit.
+
 Repo <repos>/Decaf-Voxel-Engine. 44 commits, 2026-03-16..03-20 (5 days), 4 PRs. wgpu 0.20, winit 0.29, edition 2024, ~13.2k lines Rust under src/ (git stat counts ~17k incl. WGSL/TOML). Build: `cargo build --release` OK (4m24s cold), `cargo test --release` 85/85 pass, `cargo clippy --release` 5 trivial warnings (collapsible_if, derivable_impls, question_mark). Nothing modified in repo; bench was run on a copy in scratchpad/decaf-copy.
 
 ## 1. History

@@ -1,5 +1,7 @@
 # Lemon-Voxel-Engine audit (50 commits, 2026-07-06..13, ~12.3k Rust lines + WGSL; +19.8k/-3.9k diff lines)
 
+> Snapshot of Lemon at its last commit, written 2026-11-03. Numbers measured here were measured on the cloud VM against Lemon's code; elsewhere in the repo they count as **quoted** from this audit.
+
 Env: 4 cores, `cargo build --release --examples` OK (4m24 cold), 39 tests pass (0.7s), clippy: 5 trivial warnings (too_many_arguments x3, collapsible_if x2), 0 `unsafe`. `headless_render_check` WORKS on lavapipe (`VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json`): "95.2% Gras OK". So a CPU/Vulkan-software harness exists for correctness, not for perf.
 
 ## 1. History narrative

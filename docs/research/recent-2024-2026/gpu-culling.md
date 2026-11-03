@@ -1,5 +1,7 @@
 # GPU-driven rendering and culling for voxel terrain
 
+> Snapshot, 2026-11-03. Tags [S] and [U] and the number labels as in `docs/DOC-GUIDELINES.md` §4. Ranked candidates from this report are in `docs/BACKLOG.md`.
+
 Tags: [S] = read on a fetched page (URL given), [U] = background knowledge or not verified. "Quoted" = number from the source. "Estimate" = mine.
 Caveat: the DeepWiki pages for Voxy/Nvidium are auto-generated summaries of source code, not author writing. Treat as [S-secondary]. Meshelium TECHNICAL.md / PERFORMANCE.md and zeux.io failed to fetch, so Meshelium internals and Zeux's two-phase write-up are NOT verified here.
 

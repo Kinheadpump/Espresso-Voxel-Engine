@@ -1,5 +1,7 @@
 # LOD and far terrain for blocky voxel worlds (research for Espresso)
 
+> Snapshot, 2026-11-03. Tags [S] and [U] and the number labels as in `docs/DOC-GUIDELINES.md` §4. Ranked candidates from this report are in `docs/BACKLOG.md`.
+
 Date of research: 2026-11-03. Tags: [S] = verified by reading a fetched page or cloned source this session (URL / repo given); [U] = background knowledge, not verified. "quoted" = number is in the source; "estimate" = mine.
 
 Method note: WebSearch returned mostly junk for Voxy / DH / Nvidium (no blog posts with internals exist that I could find). The best primary sources are the source repos themselves, so I cloned and read them: Voxy (GitHub MCRcortex/voxy, HEAD dated 2026-10-19), Distant Horizons core (GitLab jeseibel/distant-horizons-core, HEAD 2026-11-02), Cubyz (GitHub PixelGuys/Cubyz, HEAD 2026-11-02).

@@ -1,5 +1,7 @@
 # Recent voxel engine research (2024–2026): what Espresso can adopt
 
+> Snapshot, 2026-11-03. The R-01..R-13 candidates below are merged with the engine survey's proposals and ranked in `docs/BACKLOG.md` (old-id table at its end). This page keeps the evidence and the original order; the backlog holds the current ranking.
+
 Survey date: 2026-11-03. Five topic reports, each with sources, fit, expected benefit, effort and the measurement that decides it:
 
 | Report | Topic |
@@ -10,7 +12,7 @@ Survey date: 2026-11-03. Five topic reports, each with sources, fit, expected be
 | [lod.md](lod.md) | LOD and far terrain (Cubyz, Voxy, Distant Horizons source read) |
 | [storage-gen-streaming.md](storage-gen-streaming.md) | Persistence, compression, generation, streaming, light propagation |
 
-This extends `docs/research/voxel-techniques.md` and the engine survey behind `docs/PROPOSALS.md` (PR #2); sources covered there were skipped. Nothing here changes engine code, and nothing starts before the hardware baseline (roadmap item 1).
+This extends `docs/research/voxel-techniques.md` and the engine survey behind `docs/BACKLOG.md` (PR #2); sources covered there were skipped. Nothing here changes engine code, and nothing starts before the hardware baseline (roadmap item 1).
 
 Labels follow the benchmarking docs: **[S]** read on a page or in source fetched this session (URL given), **[U]** background knowledge or unverified. Numbers are **quoted** (from the source), **computed** or **estimate**. No number in these reports was measured on Espresso.
 
@@ -20,7 +22,7 @@ There is little 2024–2026 *academic* work aimed at editable blocky worlds. The
 
 ## Ranked shortlist across topics
 
-R-ids are separate from the P-ids in `docs/PROPOSALS.md`; where an item sharpens a proposal or roadmap entry, the column says so.
+R-ids are separate from the P-ids in `docs/BACKLOG.md`; where an item sharpens a proposal or roadmap entry, the column says so.
 
 | # | Candidate | Source (year) | Relates to | Effort | Verdict | Decided by |
 |---|---|---|---|---|---|---|

@@ -74,7 +74,9 @@ Run the script twice, a few minutes apart, and compare the two `default` files:
 
 Every metric should come back "within noise". That confirms the machine is stable enough to judge changes. If something is not, close more background work and run again.
 
-Commit the `benchmarks/baselines/<label>/` folder, or send it to Claude. Those files become the reference that later PRs are measured against.
+Commit the `benchmarks/baselines/<label>/` folder, or send it to Claude. Those files become the reference that later PRs are measured against, and their summary goes into `docs/PERFORMANCE.md`.
+
+Existing baselines: `noah-msi-rtx2060` (i7-9750H, RTX 2060, Vulkan; 2026-11-03).
 
 ### Comparing a change
 
@@ -90,7 +92,7 @@ Run both on the same machine and session, back to back, with the same settings. 
 
 ## Reporting rules
 
+Labels (**measured**, **quoted**, **computed**, **estimate**, **target**) and how to write them: `docs/DOC-GUIDELINES.md` §4. The two rules specific to benchmarks:
+
 - **Measured** means produced by `vx bench`, `cargo bench-cpu` or `tools/legacy-compare` in a release build, with the machine named.
-- **Quoted** means copied from another document or commit and not re-run. Always label it as quoted, with its source.
-- **Computed** means derived arithmetically, for example chunk count × bytes per chunk. Label it as computed.
 - A speed-up claim needs both runs from the same machine and session, and a verdict outside the noise band.

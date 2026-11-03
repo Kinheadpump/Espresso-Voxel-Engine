@@ -1,5 +1,7 @@
 # Rust voxel engine tooling research (2026-11-03)
 
+> Snapshot, 2026-11-03. Label mapping to `docs/DOC-GUIDELINES.md`: (K) = [U]; crate versions from the crates.io API = [S].
+
 Versions verified via crates.io API today. Claims marked (K) are from background knowledge, not re-verified today.
 
 ## Verified versions

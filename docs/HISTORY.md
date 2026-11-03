@@ -1,6 +1,6 @@
 # History: Decaf and Lemon
 
-Both earlier attempts are preserved untouched in their own repos. Full audits with file:line references: `docs/research/decaf-audit.md`, `docs/research/lemon-audit.md`. This page is the summary of what they taught us.
+Both earlier attempts are preserved untouched in their own repos. Full audits with file:line references: `docs/research/decaf-audit.md`, `docs/research/lemon-audit.md`. This page is the summary of what they taught us. Every Decaf and Lemon number here is **quoted** from those audits or from the old commits; none was re-measured for Espresso except where `docs/PERFORMANCE.md` says so.
 
 ## Timeline
 
@@ -17,7 +17,7 @@ Both earlier attempts are preserved untouched in their own repos. Full audits wi
 
 Good: 8-byte packed quads with storage-buffer vertex pulling and `multi_draw_indirect`; `Arc` copy-on-write chunk snapshots for meshing; request-id stale-result rejection; atomic save pattern; solid lifecycle tests.
 
-Why it was slow (measured single-thread, release):
+Why it was slow (quoted from the Decaf audit, which measured single-thread release builds on the cloud VM):
 - Generation ~4.95 ms/chunk, meshing ~1.22 ms/chunk (scalar greedy with `Instant::now()` inside the slice loop).
 - Voxels stored as `u32` (128 KiB per chunk, even for air).
 - Streaming, mesh orchestration, upload and culling all on the main thread every frame; per-frame O(5625) rebuild of the load set with sorting and a HashSet.
@@ -26,12 +26,12 @@ Why it was slow (measured single-thread, release):
 
 ## Lemon (second attempt)
 
-Good (we port these ideas): 32-bit face format with vertex pulling and `draw_index`; GPU compute culling writing indirect args plus a count for `multi_draw_indirect_count`; the pool slot doubling as GPU index; reverse-Z; HZB min-reduction; column-bitfield exposure (`col & !(col >> 1)`); rayon backpressure; cascade fitting for CSM. Lemon reached 500–750 FPS at render distance 32 (4225 chunks, ~217 visible) on an Intel iGPU (commit e97f5c9), the only real frame numbers in either repo.
+Good (we port these ideas): 32-bit face format with vertex pulling and `draw_index`; GPU compute culling writing indirect args plus a count for `multi_draw_indirect_count`; the pool slot doubling as GPU index; reverse-Z; HZB min-reduction; column-bitfield exposure (`col & !(col >> 1)`); rayon backpressure; cascade fitting for CSM. Lemon reached 500–750 FPS at render distance 32 (4225 chunks, ~217 visible) on an Intel iGPU (quoted, commit e97f5c9), the only real-GPU frame numbers in either repo.
 
 Why it stalled:
 - The async mesher had no neighbour data and re-evaluated the procedural generator to predict borders (`boundary_planes`): 1.4–2.4 ms per chunk against 0.15–0.22 ms for the mesh itself, and the source of most bug-fix commits (gaps, races with edits).
 - The mesher was only half binary: column bitfields, then a scalar 2D greedy merge. Commit 631d477 claimed 643 µs for its mesh bench; the audit measured 6.2 ms for the same bench at HEAD. That is not a fair like-for-like comparison (different machine, and the `is_solid` border path changed after the claim), but nobody re-measured after those changes.
-- Fixed 64 KiB `u16` arrays for every chunk including air, pool sized to the whole window: ~2.4 GB RAM for 38k chunks. LOD was attempted in debug builds and deleted two days later.
+- Fixed 64 KiB `u16` arrays for every chunk including air, pool sized to the whole window: ~2.4 GB RAM for 38k chunks (computed in the Lemon audit). LOD was attempted in debug builds and deleted two days later.
 - Single-phase occlusion with a 48-block radius hack; all 6 face directions drawn for every visible chunk; shadows redrew the union of chunks in every cascade.
 - A "SIMD terrain" commit that was not SIMD (noiz sampled point by point).
 - `config.rs` (918 lines) held each setting three times; heavy German doc comments despite the "no comments" rule.

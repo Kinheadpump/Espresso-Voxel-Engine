@@ -1,5 +1,7 @@
 # Meshing and geometry formats: research for Espresso
 
+> Snapshot, 2026-11-03. Tags [S] and [U] and the number labels as in `docs/DOC-GUIDELINES.md` §4. Ranked candidates from this report are in `docs/BACKLOG.md`.
+
 Date: 2026-11-03. Tags: [S] = read on a page I fetched (URL given); [U] = background knowledge / my own reasoning, not verified. "Quoted" = number from the source. "Estimate" = mine.
 
 Honest note: the 2024-2026 literature on blocky-voxel meshing is thin. No SIGGRAPH/HPG/arXiv paper turned up that beats the binary-greedy approach Espresso already has. Most new material is crates, mods and blogs. Espresso's mesher (~35 us/surface chunk, u64 quads) is already in the same range as the best published crate numbers, so the wins are in AO, LOD and the draw path, not in raw meshing speed.

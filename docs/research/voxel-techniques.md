@@ -1,5 +1,7 @@
 # Voxel engine techniques survey (Rust/wgpu, Minecraft-like) - 2026-11-03
 
+> Snapshot, 2026-11-03. Tags [S] and [U] as in `docs/DOC-GUIDELINES.md` §4.
+
 Legend: [S] = verified from a fetched page (URL given). [U] = uncertain / from background knowledge, NOT verified this session. Several areas had thin search results; gaps are listed at the end.
 
 ## 1. Meshing
