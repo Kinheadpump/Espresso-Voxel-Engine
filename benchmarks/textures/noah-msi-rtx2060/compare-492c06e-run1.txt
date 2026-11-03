@@ -1,0 +1,13 @@
+baseline : flat.json (492c06e1ca67)
+candidate: textured.json (492c06e1ca67)
+WARNING: surface differs (shading flat -> textured, textures none -> b9f7c95fe5a532a7): frame timings include the shading change
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                    72.8ms      72.3ms    -0.6%   18.1%  within noise
+meshing                             52.6ms      55.8ms    +6.1%    9.7%  within noise
+upload                               7.4ms       7.3ms    -1.5%    5.0%  within noise
+frame CPU encode                   151.6us     161.6us    +6.6%   13.3%  within noise
+  of which record                   61.2us      72.7us   +18.8%   23.5%  within noise
+  of which submit                   66.9us      67.6us    +1.0%    5.8%  within noise
+frame GPU terrain pass             503.9us     557.1us   +10.6%    7.8%  SLOWER
+frame wall (CPU+GPU, synced)       932.6us     985.2us    +5.6%    9.6%  within noise
