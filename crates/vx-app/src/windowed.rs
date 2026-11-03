@@ -178,6 +178,7 @@ impl RenderState {
             MOVE_SPEED
         };
         self.camera.position += direction.normalize_or_zero() * speed * dt;
+        self.camera.rebase();
     }
 
     fn render(&mut self) {

@@ -25,6 +25,7 @@ pub struct Options {
     pub shading: Shading,
     pub screenshot_view: Option<ScenarioView>,
     pub indirect_validation: IndirectValidation,
+    pub world_shift_chunks: i32,
 }
 
 #[derive(Clone, Copy)]
@@ -38,6 +39,7 @@ const USAGE: &str = "usage:
   vx --probe                                       print adapter, tier, features
   vx --screenshot <file.png> [--radius <chunks>] [--shading flat|textured]
      [--scenario <name> [--at 0..1]] [--indirect-validation on|off]
+     [--world-shift <chunks>]   render the same terrain moved by <chunks> along x and z
   vx bench [--scenario small|default|far|cave|mountain|fly-fast] [--repeats N] [--frames N] [--warmup N]
            [--threads N] [--resolution WxH] [--shading flat|textured]
            [--indirect-validation on|off] [--windowed] [--out <file.json>]
@@ -63,6 +65,7 @@ impl Options {
             shading: Shading::Textured,
             screenshot_view: None,
             indirect_validation: IndirectValidation::for_build(),
+            world_shift_chunks: 0,
         };
         let mut pending = Vec::new();
         match args.next().as_deref() {
@@ -101,6 +104,7 @@ impl Options {
                 }
                 "--radius" => options.view_radius = next_value(&mut args, &arg)?,
                 "--vsync" => options.vsync = true,
+                "--world-shift" => options.world_shift_chunks = next_value(&mut args, &arg)?,
                 "--shading" => options.shading = parse_shading(&mut args, &arg)?,
                 "--indirect-validation" => {
                     options.indirect_validation = parse_indirect_validation(&mut args, &arg)?;

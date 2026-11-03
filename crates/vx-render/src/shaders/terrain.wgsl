@@ -1,6 +1,7 @@
 struct Camera {
     view_proj: mat4x4<f32>,
-    position: vec4<f32>,
+    anchor: vec4<i32>,
+    eye: vec4<f32>,
 }
 
 @group(0) @binding(0) var<uniform> camera: Camera;
@@ -17,10 +18,11 @@ const FACE_ROTATE_BIT = 16u;
 
 struct VertexOut {
     @builtin(position) clip_position: vec4<f32>,
-    @location(0) world_position: vec3<f32>,
+    @location(0) relative_position: vec3<f32>,
     @location(1) @interpolate(flat) block: u32,
     @location(2) @interpolate(flat) direction: u32,
     @location(3) @interpolate(flat) face: u32,
+    @location(4) texture_position: vec3<f32>,
 }
 
 const CORNERS_FRONT = array<vec2<u32>, 6>(
@@ -50,8 +52,13 @@ fn face_texture(block: u32, direction: u32) -> u32 {
     return layer | (rotate << FACE_ROTATE_BIT);
 }
 
+// Texture coordinates repeat every block and the rotation hash only needs per-cell variety, so
+// they use chunk origins wrapped to 4096 blocks: exact in f32 at any distance from the origin.
+const TEXTURE_WRAP_MASK = vec3(4095);
+
 struct QuadVertex {
-    world: vec3<f32>,
+    relative: vec3<f32>,
+    texture_position: vec3<f32>,
     block: u32,
     direction: u32,
 }
@@ -86,15 +93,22 @@ fn quad_vertex(vertex_index: u32, chunk_slot: u32) -> QuadVertex {
         depth_u_v.y + corner.x * size.x,
         depth_u_v.z + corner.y * size.y,
     );
-    return QuadVertex(vec3<f32>(chunk_origins[chunk_slot].xyz) + vec3<f32>(local), block, direction);
+    let chunk_origin = chunk_origins[chunk_slot].xyz;
+    return QuadVertex(
+        vec3<f32>(chunk_origin - camera.anchor.xyz) + vec3<f32>(local),
+        vec3<f32>(chunk_origin & TEXTURE_WRAP_MASK) + vec3<f32>(local),
+        block,
+        direction,
+    );
 }
 
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) chunk_slot: u32) -> VertexOut {
     let vertex = quad_vertex(vertex_index, chunk_slot);
     var out: VertexOut;
-    out.clip_position = camera.view_proj * vec4(vertex.world, 1.0);
-    out.world_position = vertex.world;
+    out.clip_position = camera.view_proj * vec4(vertex.relative, 1.0);
+    out.relative_position = vertex.relative;
+    out.texture_position = vertex.texture_position;
     out.block = vertex.block;
     out.direction = vertex.direction;
     out.face = 0u;
@@ -112,7 +126,7 @@ struct ChunkIdOut {
 @vertex
 fn vs_chunk_id(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) chunk_slot: u32) -> ChunkIdOut {
     let vertex = quad_vertex(vertex_index, chunk_slot);
-    return ChunkIdOut(camera.view_proj * vec4(vertex.world, 1.0), chunk_slot + 1u);
+    return ChunkIdOut(camera.view_proj * vec4(vertex.relative, 1.0), chunk_slot + 1u);
 }
 
 @fragment
@@ -183,10 +197,10 @@ fn textured_albedo(world: vec3<f32>, direction: u32, face: u32) -> vec3<f32> {
 fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
     var albedo = pow(BLOCK_COLORS[min(in.block, 5u)], vec3(2.2));
     if TEXTURED {
-        albedo = textured_albedo(in.world_position, in.direction, in.face);
+        albedo = textured_albedo(in.texture_position, in.direction, in.face);
     }
     let base = albedo * DIRECTION_SHADE[in.direction];
-    let distance = length(in.world_position - camera.position.xyz);
+    let distance = length(in.relative_position - camera.eye.xyz);
     let fog = 1.0 - exp(-distance * FOG_DENSITY);
     return vec4(mix(base, SKY_COLOR, fog), 1.0);
 }

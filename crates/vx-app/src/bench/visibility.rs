@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec3, Vec4};
+use glam::{IVec3, Mat4, Vec3, Vec4};
 use serde::{Deserialize, Serialize};
 use vx_core::{CHUNK_SIZE, ChunkPos, FaceDir};
 use vx_mesh::ChunkMesh;
@@ -21,7 +21,7 @@ pub struct VisibilityCounters {
 }
 
 pub struct ChunkDrawTable {
-    chunk_min: Vec<Vec3>,
+    chunk_min: Vec<IVec3>,
     quads_per_direction: Vec<[u32; 6]>,
 }
 
@@ -56,7 +56,7 @@ impl ChunkDrawTable {
             if mesh.quads.is_empty() {
                 continue;
             }
-            table.chunk_min.push(pos.min_block().as_vec3());
+            table.chunk_min.push(pos.min_block());
             table.quads_per_direction.push(
                 mesh.direction_ranges
                     .clone()
@@ -72,7 +72,7 @@ impl ChunkDrawTable {
         visible_slots: Option<&[bool]>,
     ) -> [RungTally; 4] {
         let planes = frustum_planes(camera.view_proj);
-        let eye = Vec4::from_array(camera.position).truncate();
+        let eye = camera.eye();
         let mut tallies = [RungTally::default(); 4];
         for (slot, (&min, quads)) in self
             .chunk_min
@@ -82,6 +82,7 @@ impl ChunkDrawTable {
         {
             let (all_draws, all_quads) = draws_and_quads(quads, |_| true);
             tallies[0].add_chunk(all_draws, all_quads);
+            let min = camera.relative(min);
             if !aabb_in_frustum(&planes, min, min + Vec3::splat(CHUNK_EXTENT)) {
                 continue;
             }
@@ -189,11 +190,15 @@ mod tests {
 
     #[test]
     fn frustum_keeps_chunks_ahead_and_rejects_chunks_behind() {
-        let planes = frustum_planes(camera_looking_down_x().view_proj);
-        let chunk = |x: f32| (Vec3::new(x, 0.0, 0.0), Vec3::new(x + 32.0, 32.0, 32.0));
-        let (ahead_min, ahead_max) = chunk(64.0);
-        let (behind_min, behind_max) = chunk(-96.0);
-        let (around_min, around_max) = chunk(-16.0);
+        let camera = camera_looking_down_x();
+        let planes = frustum_planes(camera.view_proj);
+        let chunk = |x: i32| {
+            let min = camera.relative(IVec3::new(x, 0, 0));
+            (min, min + Vec3::splat(32.0))
+        };
+        let (ahead_min, ahead_max) = chunk(64);
+        let (behind_min, behind_max) = chunk(-96);
+        let (around_min, around_max) = chunk(-16);
         assert!(aabb_in_frustum(&planes, ahead_min, ahead_max));
         assert!(!aabb_in_frustum(&planes, behind_min, behind_max));
         assert!(aabb_in_frustum(&planes, around_min, around_max));

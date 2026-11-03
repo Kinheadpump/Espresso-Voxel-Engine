@@ -42,6 +42,8 @@ jobs:
       - run: cargo run --release -- --probe
       - run: cargo run --release -- --screenshot frame.png --radius 8
       - run: cargo run --release -- --screenshot frame-flat.png --radius 8 --shading flat
+      - run: cargo run --release -- --screenshot frame-far-origin.png --radius 8 --world-shift 1000064
+      - run: cmp frame.png frame-far-origin.png
       - run: cargo run --release -- bench --scenario small --repeats 3 --warmup 2 --frames 10 --resolution 320x180 --out bench-smoke.json
       - run: cargo run --release -- bench-compare bench-smoke.json bench-smoke.json
       - uses: actions/upload-artifact@v4

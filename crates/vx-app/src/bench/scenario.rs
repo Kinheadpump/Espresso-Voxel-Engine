@@ -192,7 +192,8 @@ mod tests {
     #[test]
     fn tunnel_camera_stays_inside_the_tunnel() {
         for step in 0..=100 {
-            let position = tunnel_camera(step as f32 / 100.0).position;
+            let camera = tunnel_camera(step as f32 / 100.0);
+            let position = camera.anchor.as_vec3() + camera.position;
             assert!(position.cmpge(TUNNEL.min.as_vec3()).all());
             assert!(position.cmplt(TUNNEL.max.as_vec3()).all());
         }
@@ -203,7 +204,11 @@ mod tests {
         let camera =
             Scenario::Default.camera_at(&TerrainGenerator::new(TerrainSettings::default()), 0.25);
         let expected = orbit_camera(256.0, 0.25);
-        assert_eq!(camera.position, expected.position);
-        assert!((camera.position - Vec3::new(0.0, ORBIT_HEIGHT, 256.0)).length() < 1e-3);
+        assert_eq!(
+            (camera.anchor, camera.position),
+            (expected.anchor, expected.position)
+        );
+        let eye = camera.anchor.as_vec3() + camera.position;
+        assert!((eye - Vec3::new(0.0, ORBIT_HEIGHT, 256.0)).length() < 1e-3);
     }
 }
