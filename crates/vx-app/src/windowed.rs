@@ -112,7 +112,12 @@ impl RenderState {
         surface.configure(&gpu.device, &surface_config);
         let depth_view =
             create_depth_view(&gpu.device, surface_config.width, surface_config.height);
-        let terrain = TerrainRenderer::new(&gpu.device, surface_config.format);
+        let terrain = TerrainRenderer::new(
+            &gpu.device,
+            &gpu.queue,
+            surface_config.format,
+            options.shading,
+        )?;
         Ok(Self {
             window,
             surface,

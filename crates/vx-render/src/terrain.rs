@@ -5,7 +5,7 @@ use vx_core::ChunkPos;
 use vx_mesh::{ChunkMesh, PackedQuad};
 use wgpu::util::DeviceExt;
 
-use crate::{CameraUniform, TERRAIN_SHADER};
+use crate::{CameraUniform, TERRAIN_SHADER, block_textures::BlockTextures};
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 const VERTICES_PER_QUAD: u32 = 6;
@@ -17,6 +17,29 @@ struct DrawIndirectArgs {
     instance_count: u32,
     first_vertex: u32,
     first_instance: u32,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Shading {
+    Flat,
+    Textured,
+}
+
+impl Shading {
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "flat" => Some(Self::Flat),
+            "textured" => Some(Self::Textured),
+            _ => None,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Self::Flat => "flat",
+            Self::Textured => "textured",
+        }
+    }
 }
 
 pub struct ChunkMeshRef<'a> {
@@ -36,17 +59,28 @@ pub struct TerrainRenderer {
     pipeline: wgpu::RenderPipeline,
     bind_group_layout: wgpu::BindGroupLayout,
     camera_buffer: wgpu::Buffer,
+    block_faces: wgpu::Buffer,
+    textures: BlockTextures,
+    shading: Shading,
     geometry: Option<UploadedGeometry>,
 }
 
 impl TerrainRenderer {
-    pub fn new(device: &wgpu::Device, color_format: wgpu::TextureFormat) -> Self {
+    pub fn new(
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        color_format: wgpu::TextureFormat,
+        shading: Shading,
+    ) -> anyhow::Result<Self> {
         let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("terrain_bind_group_layout"),
             entries: &[
                 layout_entry(0, wgpu::BufferBindingType::Uniform),
                 layout_entry(1, wgpu::BufferBindingType::Storage { read_only: true }),
                 layout_entry(2, wgpu::BufferBindingType::Storage { read_only: true }),
+                layout_entry(3, wgpu::BufferBindingType::Storage { read_only: true }),
+                texture_array_layout_entry(4),
+                sampler_layout_entry(5),
             ],
         });
         let camera_buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -55,12 +89,32 @@ impl TerrainRenderer {
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-        Self {
-            pipeline: create_pipeline(device, &bind_group_layout, color_format),
+        let block_faces = storage_buffer(
+            device,
+            "block_faces",
+            bytemuck::cast_slice(&vx_core::block_face_table()),
+        );
+        Ok(Self {
+            pipeline: create_pipeline(device, &bind_group_layout, color_format, shading),
             bind_group_layout,
             camera_buffer,
+            block_faces,
+            textures: BlockTextures::new(device, queue)?,
+            shading,
             geometry: None,
-        }
+        })
+    }
+
+    pub fn shading(&self) -> Shading {
+        self.shading
+    }
+
+    pub fn texture_bytes(&self) -> u64 {
+        self.textures.bytes
+    }
+
+    pub fn texture_hash(&self) -> u64 {
+        self.textures.content_hash
     }
 
     pub fn upload_static<'a>(
@@ -109,6 +163,18 @@ impl TerrainRenderer {
                 wgpu::BindGroupEntry {
                     binding: 2,
                     resource: origin_buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: self.block_faces.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: wgpu::BindingResource::TextureView(&self.textures.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 5,
+                    resource: wgpu::BindingResource::Sampler(&self.textures.sampler),
                 },
             ],
         });
@@ -192,11 +258,40 @@ fn layout_entry(binding: u32, ty: wgpu::BufferBindingType) -> wgpu::BindGroupLay
     }
 }
 
+fn texture_array_layout_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Texture {
+            sample_type: wgpu::TextureSampleType::Float { filterable: true },
+            view_dimension: wgpu::TextureViewDimension::D2Array,
+            multisampled: false,
+        },
+        count: None,
+    }
+}
+
+fn sampler_layout_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
+    wgpu::BindGroupLayoutEntry {
+        binding,
+        visibility: wgpu::ShaderStages::FRAGMENT,
+        ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+        count: None,
+    }
+}
+
 fn create_pipeline(
     device: &wgpu::Device,
     bind_group_layout: &wgpu::BindGroupLayout,
     color_format: wgpu::TextureFormat,
+    shading: Shading,
 ) -> wgpu::RenderPipeline {
+    let textured = f64::from(u8::from(shading == Shading::Textured));
+    let constants = [("TEXTURED", textured)];
+    let compilation_options = wgpu::PipelineCompilationOptions {
+        constants: &constants,
+        ..wgpu::PipelineCompilationOptions::default()
+    };
     let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
         label: Some("terrain_shader"),
         source: wgpu::ShaderSource::Wgsl(TERRAIN_SHADER.into()),
@@ -212,7 +307,7 @@ fn create_pipeline(
         vertex: wgpu::VertexState {
             module: &shader,
             entry_point: Some("vs_main"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            compilation_options: compilation_options.clone(),
             buffers: &[],
         },
         primitive: wgpu::PrimitiveState {
@@ -232,7 +327,7 @@ fn create_pipeline(
         fragment: Some(wgpu::FragmentState {
             module: &shader,
             entry_point: Some("fs_main"),
-            compilation_options: wgpu::PipelineCompilationOptions::default(),
+            compilation_options,
             targets: &[Some(wgpu::ColorTargetState {
                 format: color_format,
                 blend: None,

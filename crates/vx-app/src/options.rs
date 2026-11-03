@@ -2,6 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 
+use vx_render::Shading;
+
 use crate::bench::{BenchOptions, Scenario};
 
 pub enum Mode {
@@ -19,14 +21,15 @@ pub struct Options {
     pub mode: Mode,
     pub view_radius: u32,
     pub vsync: bool,
+    pub shading: Shading,
 }
 
 const USAGE: &str = "usage:
-  vx [--radius <chunks>] [--vsync]                 windowed fly-cam
+  vx [--radius <chunks>] [--vsync] [--shading flat|textured]   windowed fly-cam
   vx --probe                                       print adapter, tier, features
-  vx --screenshot <file.png> [--radius <chunks>]   headless single frame
+  vx --screenshot <file.png> [--radius <chunks>] [--shading flat|textured]
   vx bench [--scenario small|default|far] [--repeats N] [--frames N] [--warmup N]
-           [--threads N] [--resolution WxH] [--out <file.json>]
+           [--threads N] [--resolution WxH] [--shading flat|textured] [--out <file.json>]
   vx bench-compare <baseline.json> <candidate.json>";
 
 fn next_value<T: std::str::FromStr>(
@@ -46,6 +49,7 @@ impl Options {
             mode: Mode::Windowed,
             view_radius: 12,
             vsync: false,
+            shading: Shading::Textured,
         };
         let mut pending = Vec::new();
         match args.next().as_deref() {
@@ -74,12 +78,18 @@ impl Options {
                 }
                 "--radius" => options.view_radius = next_value(&mut args, &arg)?,
                 "--vsync" => options.vsync = true,
+                "--shading" => options.shading = parse_shading(&mut args, &arg)?,
                 "--help" | "-h" => bail!("{USAGE}"),
                 _ => bail!("unknown argument {arg:?}\n{USAGE}"),
             }
         }
         Ok(options)
     }
+}
+
+fn parse_shading(args: &mut impl Iterator<Item = String>, flag: &str) -> Result<Shading> {
+    let name: String = next_value(args, flag)?;
+    Shading::from_name(&name).with_context(|| format!("unknown shading {name:?}\n{USAGE}"))
 }
 
 fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
@@ -100,6 +110,7 @@ fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
                 bench.width = width.parse().context(USAGE)?;
                 bench.height = height.parse().context(USAGE)?;
             }
+            "--shading" => bench.shading = parse_shading(&mut args, &arg)?,
             "--out" => bench.out = Some(next_value::<String>(&mut args, &arg)?.into()),
             _ => bail!("unknown bench argument {arg:?}\n{USAGE}"),
         }

@@ -41,7 +41,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 14. Editing with remesh of affected neighbours; persistence (region files, palette-compressed).
 15. Per-vertex AO in the free quad bits (only merge equal-AO faces; measure the quad-count increase) or SSAO.
 16. Flood-fill sky and block light.
-17. Block textures (concept and plan in `docs/TEXTURES.md`, ADR-0014: 16 px texture array, `--shading flat|textured` in the bench), transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
+17. ~~Block textures~~ done (16 px texture array, `--shading flat|textured`; `docs/TEXTURES.md`); still needs Noah's GPU measurement for ADR-0014. Transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
 18. Camera-relative rendering for large coordinates (world origin rebasing).
 
 ## Known issues

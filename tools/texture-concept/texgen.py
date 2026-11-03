@@ -1,6 +1,8 @@
 """Procedural block textures for the Espresso art concept (docs/TEXTURES.md).
 
-Deterministic: same seed, same pixels. Usage: python3 texgen.py OUT_DIR
+Deterministic: same seed, same pixels.
+Usage: python3 texgen.py OUT_DIR            # crisp16/ and crisp32/ concept sets
+       python3 texgen.py OUT_DIR SIZE       # one flat set, e.g. ../../assets/blocks 16
 """
 import sys
 from pathlib import Path
@@ -221,6 +223,11 @@ def generate(size, seed=7):
 
 if __name__ == "__main__":
     out = Path(sys.argv[1])
+    if len(sys.argv) > 2:
+        out.mkdir(parents=True, exist_ok=True)
+        for name, pixels in generate(int(sys.argv[2])).items():
+            Image.fromarray(pixels).save(out / f"{name}.png", optimize=True)
+        sys.exit(0)
     for size in (16, 32):
         folder = out / f"crisp{size}"
         folder.mkdir(parents=True, exist_ok=True)

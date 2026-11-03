@@ -52,12 +52,14 @@ pub fn print_report(report: &BenchReport) {
         report.gpu.driver_info,
     );
     println!(
-        "content: {} chunks generated, {} meshed, {} quads, {} draws, hash {} | voxel heap {:.1} MiB | geometry buffers {:.1} MiB | RSS {}",
+        "content: {} chunks generated, {} meshed, {} quads, {} draws, hash {} | shading {} ({:.1} KiB textures) | voxel heap {:.1} MiB | geometry buffers {:.1} MiB | RSS {}",
         report.content.chunks_generated,
         report.content.chunks_meshed,
         report.content.quads,
         report.content.draws,
         report.content.mesh_hash,
+        report.content.shading,
+        report.content.texture_bytes as f64 / 1024.0,
         report.content.voxel_heap_bytes as f64 / BYTES_PER_MIB,
         report.content.geometry_buffer_bytes as f64 / BYTES_PER_MIB,
         report
@@ -86,13 +88,26 @@ pub fn print_report(report: &BenchReport) {
     }
 }
 
+fn or_none(value: &str) -> &str {
+    if value.is_empty() { "none" } else { value }
+}
+
 fn comparability_warnings(baseline: &BenchReport, candidate: &BenchReport) -> Vec<String> {
     let mut warnings = Vec::new();
     if baseline.system != candidate.system || baseline.gpu != candidate.gpu {
         warnings
             .push("different machine or GPU/driver: absolute timings are not comparable".into());
     }
-    if baseline.content != candidate.content {
+    if !baseline.content.same_surface(&candidate.content) {
+        warnings.push(format!(
+            "surface differs (shading {} -> {}, textures {} -> {}): frame timings include the shading change",
+            baseline.content.shading,
+            candidate.content.shading,
+            or_none(&baseline.content.texture_hash),
+            or_none(&candidate.content.texture_hash),
+        ));
+    }
+    if !baseline.content.same_geometry(&candidate.content) {
         warnings.push(format!(
             "rendered content differs (quads {} -> {}, hash {} -> {}): timings cover different work",
             baseline.content.quads, candidate.content.quads, baseline.content.mesh_hash, candidate.content.mesh_hash

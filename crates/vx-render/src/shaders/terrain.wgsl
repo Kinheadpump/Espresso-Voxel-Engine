@@ -6,12 +6,21 @@ struct Camera {
 @group(0) @binding(0) var<uniform> camera: Camera;
 @group(0) @binding(1) var<storage, read> quads: array<vec2<u32>>;
 @group(0) @binding(2) var<storage, read> chunk_origins: array<vec4<i32>>;
+@group(0) @binding(3) var<storage, read> block_faces: array<u32>;
+@group(0) @binding(4) var block_textures: texture_2d_array<f32>;
+@group(0) @binding(5) var block_sampler: sampler;
+
+override TEXTURED: bool = true;
+const TEXTURE_SIZE = 16.0;
+const FACE_LAYER_MASK = 0xFFFFu;
+const FACE_ROTATE_BIT = 16u;
 
 struct VertexOut {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) world_position: vec3<f32>,
     @location(1) @interpolate(flat) block: u32,
     @location(2) @interpolate(flat) direction: u32,
+    @location(3) @interpolate(flat) face: u32,
 }
 
 const CORNERS_FRONT = array<vec2<u32>, 6>(
@@ -28,6 +37,17 @@ fn depth_u_v_to_xyz(axis: u32, d: u32, u: u32, v: u32) -> vec3<u32> {
         case 1u: { return vec3(u, d, v); }
         default: { return vec3(u, v, d); }
     }
+}
+
+// block_faces word mirrors vx_core::BlockFaces::packed: top | side << 10 | bottom << 20 | rotate << 30.
+// Output: layer | rotate << 16, rotate only for top and bottom faces.
+fn face_texture(block: u32, direction: u32) -> u32 {
+    let word = block_faces[select(0u, block, block < arrayLength(&block_faces))];
+    let vertical = (direction >> 1u) == 1u;
+    let face_class = select(1u, select(2u, 0u, direction == 2u), vertical);
+    let layer = (word >> (10u * face_class)) & 0x3FFu;
+    let rotate = select(0u, (word >> 30u) & 1u, vertical);
+    return layer | (rotate << FACE_ROTATE_BIT);
 }
 
 @vertex
@@ -68,6 +88,10 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) ch
     out.world_position = world;
     out.block = block;
     out.direction = direction;
+    out.face = 0u;
+    if TEXTURED {
+        out.face = face_texture(block, direction);
+    }
     return out;
 }
 
@@ -83,9 +107,59 @@ const DIRECTION_SHADE = array<f32, 6>(0.80, 0.80, 1.00, 0.50, 0.65, 0.65);
 const SKY_COLOR = vec3(0.34, 0.54, 0.83);
 const FOG_DENSITY = 0.0012;
 
+// Side faces use v = -y so textures stay upright on merged walls.
+fn face_uv(world: vec3<f32>, axis: u32) -> vec2<f32> {
+    switch axis {
+        case 0u: { return vec2(world.z, -world.y); }
+        case 1u: { return world.xz; }
+        default: { return vec2(world.x, -world.y); }
+    }
+}
+
+fn cell_hash(cell: vec2<i32>) -> u32 {
+    var h = (bitcast<u32>(cell.x) * 0x8da6b343u) ^ (bitcast<u32>(cell.y) * 0xd8163841u);
+    h = (h ^ (h >> 15u)) * 0x2c1b3c6du;
+    return h ^ (h >> 12u);
+}
+
+fn rotate_quarter_turns(p: vec2<f32>, turns: u32) -> vec2<f32> {
+    switch turns {
+        case 1u: { return vec2(-p.y, p.x); }
+        case 2u: { return -p; }
+        case 3u: { return vec2(p.y, -p.x); }
+        default: { return p; }
+    }
+}
+
+// Texel-snapped linear filtering: inside a texel the UV is pinned to its centre, and the
+// blend to the neighbour spans one screen pixel (|t - c| / footprint). Mip selection uses
+// the unsnapped derivatives, so distant surfaces still filter smoothly.
+fn textured_albedo(world: vec3<f32>, direction: u32, face: u32) -> vec3<f32> {
+    let uv = face_uv(world, direction >> 1u);
+    var ddx = dpdx(uv);
+    var ddy = dpdy(uv);
+    var sample_uv = uv;
+    if ((face >> FACE_ROTATE_BIT) & 1u) == 1u {
+        let cell = floor(uv);
+        let turns = cell_hash(vec2<i32>(cell)) & 3u;
+        sample_uv = cell + 0.5 + rotate_quarter_turns(uv - cell - 0.5, turns);
+        ddx = rotate_quarter_turns(ddx, turns);
+        ddy = rotate_quarter_turns(ddy, turns);
+    }
+    let texel = sample_uv * TEXTURE_SIZE;
+    let footprint = max((abs(ddx) + abs(ddy)) * TEXTURE_SIZE, vec2(1e-6));
+    let edge = floor(texel + 0.5);
+    let snapped = edge + clamp((texel - edge) / footprint, vec2(-0.5), vec2(0.5));
+    let layer = face & FACE_LAYER_MASK;
+    return textureSampleGrad(block_textures, block_sampler, snapped / TEXTURE_SIZE, layer, ddx, ddy).rgb;
+}
+
 @fragment
 fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
-    let albedo = pow(BLOCK_COLORS[min(in.block, 5u)], vec3(2.2));
+    var albedo = pow(BLOCK_COLORS[min(in.block, 5u)], vec3(2.2));
+    if TEXTURED {
+        albedo = textured_albedo(in.world_position, in.direction, in.face);
+    }
     let base = albedo * DIRECTION_SHADE[in.direction];
     let distance = length(in.world_position - camera.position.xyz);
     let fog = 1.0 - exp(-distance * FOG_DENSITY);
