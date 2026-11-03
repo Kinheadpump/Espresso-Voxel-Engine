@@ -22,6 +22,8 @@ Ordered by expected impact on the core goal (view distance and frame time per wa
 5. **Tracy behind a feature flag** via the `profiling` crate (zones in gen, mesh, upload, frame). Verify: `bench-compare` shows no change with the feature off.
 6. **CI regression signal**: instruction-count benches (gungraun or CodSpeed) for the mesher and generator, because wall-clock on shared runners is too noisy (measured 12–28% repeat spread on a cloud VM).
 
+   Also before culling work: **occlusion counters and scenarios** (`cave`, `mountain`, `fly-fast`; counter ladder frustum → graph → Hi-Z → quads submitted, and a culling-off image-identity check). Candidate list from the 2024–2026 research survey: `docs/research/recent-2024-2026/README.md` (R-01).
+
 ## Then: streaming core
 
 7. **Chunk streaming** around the camera using `ChunkWindow`: dedicated rayon pool, priority heap, bounded in-flight jobs, generation-counter cancellation (ADR-0005), and meshing only when 6 neighbours exist (ADR-0006). Verify: no frame over budget while flying at sprint speed; chunks/s throughput.
