@@ -42,7 +42,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 15. Per-vertex AO in the free quad bits (only merge equal-AO faces; measure the quad-count increase) or SSAO.
 16. Flood-fill sky and block light.
 17. ~~Block textures~~ done (16 px texture array, `--shading flat|textured`; ADR-0014 accepted at +8.6% GPU terrain pass in `default`, measured; `docs/TEXTURES.md`). Transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
-18. Camera-relative rendering for large coordinates (world origin rebasing).
+18. Camera-relative rendering for large coordinates (chunk + local camera, ADR-0016). Scheduled in S3.
 
 ## Known issues
 

@@ -4,7 +4,7 @@ Read `AGENTS.md` first: it holds the repo map, commands and invariants that ever
 
 ## Mission
 
-Build the most optimised voxel engine we can in Rust. Every change is judged by measured frame time, chunk throughput and memory, not by feature count. Decaf (March 2026) and Lemon (July 2026) both stalled because features outran measurement; see `docs/HISTORY.md` before proposing anything that sounds like what they did.
+Build the most optimised voxel engine we can in Rust, with an **infinite world and nearly infinite render distance** (Noah, 2026-11-03), reached with whatever tricks it takes: LOD, coarse far-field generation, horizon impostors, camera-relative coordinates (ADR-0016). Every change is judged by measured frame time, chunk throughput and memory, not by feature count. Decaf (March 2026) and Lemon (July 2026) both stalled because features outran measurement; see `docs/HISTORY.md` before proposing anything that sounds like what they did.
 
 ## Engineering manifest
 

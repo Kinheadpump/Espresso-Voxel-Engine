@@ -2,6 +2,8 @@
 
 How Espresso gets from today's measured foundation to the engine we want: ten sprints, each with a goal, scope, exit gates read from `vx bench`, dependencies and risks, plus the long-term targets they add up to. Written 2026-11-03 against `main` at `0212861`. `docs/ROADMAP.md` stays the numbered work list; this doc groups those items and the `docs/BACKLOG.md` items into sprints and says when each one is done. Numbers follow `docs/DOC-GUIDELINES.md` §4.
 
+**Top-level goal (Noah, 2026-11-03):** an infinite world with nearly infinite render distance, using tricks where needed. ADR-0016 sets the coordinate ranges and precision rules that make this possible; every sprint is checked against it.
+
 ## Plan at a glance
 
 | Sprint | Goal | Main items | Gate scenario(s) | Size (estimate) |
@@ -9,9 +11,9 @@ How Espresso gets from today's measured foundation to the engine we want: ten sp
 | S0 | Close the work in flight | B-01 (scenarios, CPU counters), B-02 (find), textures phase 2 (ADR-0014) | `default`, `far`, `cave`, `mountain` | in progress |
 | S1 | See every cost | Roadmap 2–6: windowed bench, per-pass timestamps, peak memory/VRAM, Tracy, CI instruction counts; B-02 fix | all | 1 week |
 | S2 | Fix the chunk shape, double throughput | ADR-0003 chunk size, B-03 with 26-neighbour gather, SIMD noise (ADR-0009), AO probe (B-09 part 1) | `default`, `far`, divan | 1–2 weeks |
-| S3 | Stream without hitches | Roadmap 7–8, B-04, B-05, ADR-0005, `fly-fast` finalised | `fly-fast` | 1–2 weeks |
+| S3 | Stream without hitches | Roadmap 7–8, B-04, B-05, ADR-0005, roadmap 18 camera-relative rendering (ADR-0016), `fly-fast` finalised | `fly-fast` | 1–2 weeks |
 | S4 | GPU decides what to draw | Roadmap 9–10, B-06, ADR-0010 phase 1, ADR-0004 quad size | `default`, `far` | 1–2 weeks |
-| S5 | See to the horizon | B-08 LOD rings (ADR-0011), roadmap 18 camera-relative rendering | new `horizon` | 2 weeks |
+| S5 | See to the horizon | B-08 LOD rings (ADR-0011) with far levels generated directly at coarse spacing, horizon tier beyond voxel LOD | new `horizon` | 2 weeks |
 | S6 | A world you can change | B-13 edits, B-12 persistence, B-11 caves, B-14 channels | new `edit`, `save-load`, `caves` | 2 weeks |
 | S7 | Cull what is hidden | B-07 (graph, occluder quads or two-phase Hi-Z) on real caves | `cave`, `mountain`, `caves` | 1 week |
 | S8 | Light and depth | B-09 vertex AO or SSAO, B-15 light propagation, B-10 seam re-check | `default`, `far`, `caves` | 1–2 weeks |
@@ -116,6 +118,8 @@ These extend the measure-first rule in `CLAUDE.md` and `docs/BENCHMARKING.md` to
 - `fly-fast` finalised in two modes. **Frame-stepped** (a fixed number of job completions per frame, deterministic, compare-grade) is what `bench-compare` judges. **Wall-clock** (real worker timing) is recorded for p99 and max but only informs.
 - New bench metrics: time-to-fill-view, wasted-job share, upload ms per frame, largest free block after the flight.
 - Profile the dense-chunk mesher path with Tracy now that streaming feeds it (known issue in `docs/ROADMAP.md`).
+- Roadmap 18, ADR-0016: camera position as chunk + local offset, chunk origins uploaded relative to the camera chunk, view-projection without translation beyond the local offset. Moved here from S5 (2026-11-03) because streaming is the first system that lets the camera travel far, and every later pass (culling, LOD, shadows) should be written against camera-relative positions from the start. Gate: a `fly-fast` variant starting at block (1,000,000, y, 1,000,000) renders a screenshot identical to the same view at the origin with the world shifted, and frame metrics within noise of the origin run.
+- Terrain noise sampled from integer cell + fractional offset (or fastnoise-lite's `f64` feature, measured against f32 in gungraun), so terrain is not degraded far from the origin (ADR-0016).
 
 **Exit gates (`fly-fast`, radius 16, RTX 2060):**
 - Wall-clock mode: no frame above 16 ms, p99 at or below 8.3 ms (target, 120 Hz) over 60 s at sprint speed. For reference, the offscreen `default` frame wall p99 is 3.09 ms (measured, static camera).
@@ -153,7 +157,7 @@ These extend the measure-first rule in `CLAUDE.md` and `docs/BENCHMARKING.md` to
 
 **Goal:** the largest view distance at the frame budget, without seams or pop.
 
-**Scope:** B-08 (Cubyz-style rings, real-child downsample, border faces instead of skirts, hand-off when all 8 children are meshed), the ADR-0011 prototype comparison, roadmap 18 camera-relative rendering. A new ADR amends ADR-0006 for LOD borders: the finer chunk meshes its border against the coarser neighbour's real voxels, which the current "real same-level neighbours only" rule does not cover. New `horizon` scenario: fixed camera, LOD levels 0–5, written before the first LOD code.
+**Scope:** B-08 (Cubyz-style rings; near levels by real-child downsample, far levels generated directly from noise at coarse voxel spacing, because downsampling level 0 at kilometre reach would need more level-0 chunks than any budget allows; border faces instead of skirts, hand-off when all 8 children are meshed), the ADR-0011 prototype comparison, roadmap 18 camera-relative rendering. A new ADR amends ADR-0006 for LOD borders: the finer chunk meshes its border against the coarser neighbour's real voxels, which the current "real same-level neighbours only" rule does not cover. New `horizon` scenario: fixed camera, LOD levels 0–5, written before the first LOD code. Beyond the last voxel LOD ring, a horizon tier (heightmap clipmap or impostor ring, chosen by prototype in ADR-0011) carries the silhouette to the far plane, which is how "nearly infinite" reach is met (ADR-0016).
 
 **Exit gates:**
 - Reach at least 8× level 0's radius at frame GPU ≤ 4 ms and VRAM ≤ 1 GiB on the RTX 2060 (targets).
@@ -235,7 +239,8 @@ All values in the Target column are **targets** on `noah-msi-rtx2060` at 1920×1
 | Meshing, `default` | 103.2–109.8 ms | ≤ 80 ms | S2 |
 | Frame p99 while flying (`fly-fast`, radius 16) | not measured | ≤ 8.3 ms, max ≤ 16 ms | S3 |
 | Time to fill the view after a teleport, radius 16 | not measured | ≤ 0.5 s | S3 |
-| Reach with LOD at frame GPU ≤ 4 ms | no LOD | ≥ 8 km (≥ 256 chunk radius equivalent at 32³) | S5 |
+| Reach with LOD at frame GPU ≤ 4 ms | no LOD | ≥ 8 km voxel LOD (≥ 256 chunk radius equivalent at 32³), plus a horizon tier to ≥ 64 km (target, ADR-0016) | S5 |
+| Rendering far from the origin | absolute f32 world positions | identical image and frame cost at block (1,000,000, y, 1,000,000) vs the origin | S3 |
 | VRAM at maximum reach | not measured | ≤ 1 GiB | S5 |
 | Voxel heap per generated chunk, `far` | 2.7 KiB (computed: 58.6 MiB / 22,445) | ≤ 3 KiB, light channels included | S6, S8 |
 | Edit-to-visible latency | no editing | ≤ 2 frames | S6 |
