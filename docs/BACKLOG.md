@@ -50,6 +50,8 @@ Why this order:
 
 **Origin:** R-01 (`docs/research/recent-2024-2026/gpu-culling.md` §8). Relates to roadmap items 3, 9, 11.
 
+**Status (2026-11-03):** scenarios and the CPU/pixel ladder are done (roadmap 1, `docs/BENCHMARKING.md` § Culling ladder). Still open: GPU-atomic counters for the graph and Hi-Z rungs and the culling-off image-identity check; they come with B-06 and B-07.
+
 **Change:**
 - Scenarios: `cave` (camera inside a hill), `mountain` (ridge in front of a wide valley), `fly-fast` (straight flight plus a teleport), later `save-load`.
 - Counter ladder per frame, written by GPU atomics and read back 2–3 frames late through a staging buffer so the main thread never stalls: `chunks_resident` → `chunks_frustum` → `chunks_graph` → `chunks_hiz` → `draws_emitted`, plus `quads_submitted`. Report ratios to `quads_total`.

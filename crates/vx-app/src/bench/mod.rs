@@ -1,7 +1,9 @@
 mod compare;
 mod frames;
 mod report;
+mod scenario;
 mod stats;
+mod visibility;
 
 use std::{
     path::{Path, PathBuf},
@@ -9,48 +11,15 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use vx_render::{ChunkMeshRef, GpuContext, TerrainRenderer};
-use vx_world::TerrainSettings;
+use vx_render::{CameraUniform, ChunkMeshRef, GpuContext, TerrainRenderer};
+use vx_world::{TerrainGenerator, TerrainSettings};
 
 pub use compare::compare;
 use report::{BenchReport, BuildInfo, ContentInfo, GpuInfo, Results, ScenarioInfo, SystemInfo};
+pub use scenario::Scenario;
 use stats::Metric;
 
 use crate::region::{self, MeshedRegion, VERTICAL_CHUNKS};
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Scenario {
-    Small,
-    Default,
-    Far,
-}
-
-impl Scenario {
-    pub fn from_name(name: &str) -> Option<Self> {
-        match name {
-            "small" => Some(Self::Small),
-            "default" => Some(Self::Default),
-            "far" => Some(Self::Far),
-            _ => None,
-        }
-    }
-
-    fn name(self) -> &'static str {
-        match self {
-            Self::Small => "small",
-            Self::Default => "default",
-            Self::Far => "far",
-        }
-    }
-
-    fn view_radius(self) -> u32 {
-        match self {
-            Self::Small => 8,
-            Self::Default => 16,
-            Self::Far => 32,
-        }
-    }
-}
 
 pub struct BenchOptions {
     pub scenario: Scenario,
@@ -87,7 +56,7 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     if build.debug_assertions {
         log::warn!("DEBUG BUILD: results are not comparable; use `cargo run --release -- bench`");
     }
-    let terrain_settings = TerrainSettings::default();
+    let terrain_settings = options.scenario.terrain_settings();
     let gpu = pollster::block_on(GpuContext::new(GpuContext::create_instance(), None))?;
     let gpu_info = GpuInfo::of(&gpu);
     if gpu_info.is_software() {
@@ -119,7 +88,17 @@ pub fn run(options: &BenchOptions) -> Result<()> {
         options.width,
         options.height
     );
-    let frames = frames::measure(options, &gpu, &terrain);
+    let cameras = frames::path_cameras(options, &TerrainGenerator::new(terrain_settings));
+    let frames = frames::measure(options, &gpu, &terrain, &cameras);
+
+    log::info!("visibility: culling ladder over {VISIBILITY_SAMPLES} path frames");
+    let visibility = visibility::measure(
+        &gpu,
+        &terrain,
+        &visibility::ChunkDrawTable::new(region.meshes.iter().map(|(pos, mesh)| (*pos, mesh))),
+        &sampled_path_cameras(&cameras[options.warmup_frames as usize..]),
+        (options.width, options.height),
+    );
 
     let report = BenchReport {
         schema: report::SCHEMA_VERSION,
@@ -162,6 +141,7 @@ pub fn run(options: &BenchOptions) -> Result<()> {
             frame_wall_us: Metric::from_repeats("us", &frames.wall),
             process_resident_mib,
         },
+        visibility: Some(visibility),
     };
     let path = options
         .out
@@ -171,6 +151,13 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     compare::print_report(&report);
     println!("\nwrote {}", path.display());
     Ok(())
+}
+
+const VISIBILITY_SAMPLES: usize = 24;
+
+fn sampled_path_cameras(measured: &[CameraUniform]) -> Vec<CameraUniform> {
+    let stride = measured.len().div_ceil(VISIBILITY_SAMPLES).max(1);
+    measured.iter().step_by(stride).copied().collect()
 }
 
 fn measure_region(

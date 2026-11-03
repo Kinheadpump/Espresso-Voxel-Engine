@@ -1,12 +1,11 @@
-use crate::{DEPTH_FORMAT, TerrainRenderer};
+use crate::{DEPTH_FORMAT, TerrainRenderer, readback::TextureReadback};
 
 pub struct OffscreenTarget {
     pub width: u32,
     pub height: u32,
     color: wgpu::Texture,
     depth_view: wgpu::TextureView,
-    readback: wgpu::Buffer,
-    padded_bytes_per_row: u32,
+    readback: TextureReadback,
 }
 
 impl OffscreenTarget {
@@ -29,20 +28,12 @@ impl OffscreenTarget {
             view_formats: &[],
         });
         let depth_view = create_depth_view(device, width, height);
-        let padded_bytes_per_row = (width * 4).next_multiple_of(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT);
-        let readback = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("offscreen_readback"),
-            size: u64::from(padded_bytes_per_row * height),
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-            mapped_at_creation: false,
-        });
         Self {
             width,
             height,
             color,
             depth_view,
-            readback,
-            padded_bytes_per_row,
+            readback: TextureReadback::new(device, width, height, 4),
         }
     }
 
@@ -71,40 +62,9 @@ impl OffscreenTarget {
             let mut pass = begin_terrain_pass(&mut encoder, &color_view, &self.depth_view, None);
             terrain.draw(&mut pass);
         }
-        encoder.copy_texture_to_buffer(
-            self.color.as_image_copy(),
-            wgpu::TexelCopyBufferInfo {
-                buffer: &self.readback,
-                layout: wgpu::TexelCopyBufferLayout {
-                    offset: 0,
-                    bytes_per_row: Some(self.padded_bytes_per_row),
-                    rows_per_image: Some(self.height),
-                },
-            },
-            wgpu::Extent3d {
-                width: self.width,
-                height: self.height,
-                depth_or_array_layers: 1,
-            },
-        );
+        self.readback.copy_from(&mut encoder, &self.color);
         queue.submit([encoder.finish()]);
-        self.readback
-            .slice(..)
-            .map_async(wgpu::MapMode::Read, |_| {});
-        device.poll(wgpu::PollType::wait_indefinitely()).ok();
-        let mapped = self
-            .readback
-            .slice(..)
-            .get_mapped_range()
-            .expect("readback buffer mapped");
-        let row_bytes = (self.width * 4) as usize;
-        let mut pixels = Vec::with_capacity(row_bytes * self.height as usize);
-        for row in mapped.chunks_exact(self.padded_bytes_per_row as usize) {
-            pixels.extend_from_slice(&row[..row_bytes]);
-        }
-        drop(mapped);
-        self.readback.unmap();
-        pixels
+        self.readback.read_after_submit(device)
     }
 }
 
