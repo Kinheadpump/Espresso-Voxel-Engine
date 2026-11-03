@@ -1,0 +1,12 @@
+baseline : ..\base-default-run2.json (c830ca78a4a0)
+candidate: ..\cand-default-run2.json (d2a2f59a38d0)
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                    71.1ms      72.0ms    +1.2%   10.4%  within noise
+meshing                             53.1ms      53.6ms    +0.9%    7.9%  within noise
+upload                               7.4ms       7.5ms    +0.8%    6.7%  within noise
+frame CPU encode                   142.5us     142.2us    -0.2%   48.5%  within noise
+  of which record                   59.5us      59.7us    +0.3%   51.1%  within noise
+  of which submit                   65.2us      64.9us    -0.5%   43.1%  within noise
+frame GPU terrain pass             509.9us     514.0us    +0.8%    7.8%  within noise
+frame wall (CPU+GPU, synced)       946.0us     926.1us    -2.1%    9.2%  within noise
