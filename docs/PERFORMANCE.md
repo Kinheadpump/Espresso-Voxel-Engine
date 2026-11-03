@@ -109,6 +109,45 @@ Findings:
 - Frame CPU encode has a rare spike: pooled max 1.48–1.73 ms against p99 0.14–0.33 ms in every scenario (measured). The max sits in `submit` (1.39–1.65 ms), not in `record`. The windowed bench (roadmap 2) should show whether such spikes reach presentation.
 - `small` frame numbers are too noisy on this laptop for verdicts (54–85% spread).
 
+## Sprint S1 exit gate and windowed bench: `noah-msi-rtx2060` (2026-11-03)
+
+- **Build:** `main` at `fbdc3d99a264` (after PRs #13–#15: memory reporting, Tracy zones with the feature off, windowed mode), release, clean detached worktree, `git_dirty=false` in every report.
+- **Machine:** as in the S1 start baseline (driver 616.92). Windowed runs at the monitor's 3440×1440, present mode `Immediate`.
+- **Commands:** `vx bench --scenario default` twice, `--scenario far` once, `--scenario default --windowed` twice; `vx bench-compare` against `sprint-S1-start`.
+- **Raw files:** `benchmarks/baselines/noah-msi-rtx2060/sprint-S1-gate/` (5 JSON, 4 compare outputs, run log).
+
+### Gate: Tracy off vs S1 start (measured; `bench-compare` verdicts)
+
+| Metric | `default` run 1 | `default` run 2 | `far` |
+|---|---|---|---|
+| World generation | 165.3 → 145.9 ms (−11.7%, FASTER) | 168.6 → 149.6 ms (−11.3%, FASTER) | 618.9 → 559.3 ms (−9.6%, FASTER) |
+| Meshing | 64.4 → 57.6 ms (−10.6%, FASTER) | 66.1 → 58.4 ms (−11.7%, FASTER) | 253.8 → 232.8 ms (−8.3%, within noise) |
+| Upload | +4.6%, within noise | +5.1%, within noise | +2.2%, within noise |
+| Frame CPU encode | 143.4 → 146.1 µs, within noise | 145.0 → 146.5 µs, within noise | 162.3 → 166.4 µs, within noise |
+| Frame GPU terrain pass | 509.7 → 501.5 µs, within noise | 515.0 → 503.8 µs, within noise | 1,771.5 → 1,751.6 µs, within noise |
+| Frame wall | 943.2 → 932.5 µs, within noise | 943.1 → 943.7 µs, within noise | 2,208.3 → 2,192.8 µs, within noise |
+
+Content hashes are unchanged (`default` `fab6872fe1853d8e`, `far` `4229b10348a4dc42`).
+
+Verdict: **gate passed for every frame metric.** World generation and meshing read ~10% FASTER, but between `7cf5ed4` and `fbdc3d9` the only change to `vx-world`, `vx-mesh` and `region.rs` is seven `profiling::scope!` lines that expand to nothing without the `tracy` feature. The two windowed runs, the same build minutes apart, also differ by −9.8% in world generation (FASTER). That is drift in the laptop's CPU state between sessions, larger than the within-session noise band. Rule kept from the S1 start findings: CPU-side world numbers are compared only within one session, back to back.
+
+### Windowed repeatability (measured; same build, run 1 → run 2)
+
+| Metric | Run 1 | Run 2 | Change (noise) |
+|---|---|---|---|
+| Frame interval p50 (center) | 869.9 µs | 885.2 µs | +1.8% (2.2%), within noise |
+| Interval p99 | 1,467.7 µs | 1,509.6 µs | |
+| Interval max | 61,319.5 µs | 2,565.9 µs | |
+| Interval stddev | 1,115.2 µs | 174.8 µs | |
+| p99/p50 | 1.69 | 1.71 | |
+| Frame CPU encode (center) | 265.6 µs | 392.6 µs | +47.8% (46.8%), SLOWER |
+
+Findings:
+
+- **Threshold:** the windowed frame interval repeats within ~2% (measured). Windowed gates use the interval center and p99/p50 with a 2% minimum noise band (the tool's floor); windowed CPU encode and submit (47% noise) are not usable for verdicts.
+- Run 1 had a single 60 ms hitch, inside `submit` + `present` (encode max 60,053 µs, submit 60,004.7 µs). One frame in 3,000, not repeated in run 2. Gates must not use the interval max or stddev until hitches are reproducible.
+- The windowed interval at 3440×1440 (870 µs) is close to the offscreen frame wall at 1920×1080 (933–944 µs), because pipelining hides the CPU wait (computed). The resolutions differ, so neither number is a substitute for the other.
+
 ## Occlusion scenarios and culling ladder: `noah-msi-rtx2060` (2026-11-03)
 
 - **Build:** PR #9 at `b2ee6a175ccc` (candidate) and `229487f9d90f` (base), release, rustc 1.97.1, built in a clean worktree; every report has `git_dirty=false`.
