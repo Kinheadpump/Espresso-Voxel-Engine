@@ -11,7 +11,7 @@ How to measure the engine so that two runs can be compared fairly. Read this bef
 | World generation | Generate every chunk of the region on a dedicated rayon pool (`--threads`, default all logical cores) | 1 discarded warm-up + `repeats` runs |
 | Meshing | Gather padded neighbours and run the binary greedy mesher for every non-air chunk | same |
 | Upload | Build and upload the quad, origin and indirect buffers, and wait for the GPU | 1 discarded warm-up + `repeats` runs |
-| Frame CPU encode | Camera upload, pass encoding and submit | `warmup` discarded frames + `frames` measured frames, `repeats` times |
+| Frame CPU encode | Camera upload, pass encoding and submit; also split into `record` (command encoder through `finish`) and `submit` (`queue.submit`) | `warmup` discarded frames + `frames` measured frames, `repeats` times |
 | Frame GPU terrain pass | GPU timestamp at the start and end of the terrain pass | same (only if the adapter supports timestamp queries) |
 | Frame wall | Encode + submit + wait for GPU completion | same |
 
@@ -30,7 +30,7 @@ The camera follows a fixed path per scenario, so every run renders exactly the s
 
 `cave` uses its own terrain (the default heightmap plus the carved tunnel, `TerrainSettings::carved_air`), so its mesh hash differs from the other scenarios. The other five share the `default` heightmap. `vx --screenshot out.png --scenario cave --at 0.3` renders one frame of any scenario's path for a visual check.
 
-Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. `--shading flat|textured` (default `textured`) picks the terrain surface; the report records it with the texture hash, and `bench-compare` warns when the two runs differ in surface, so a flat-vs-textured comparison is explicit. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
+Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. `--shading flat|textured` (default `textured`) picks the terrain surface; the report records it with the texture hash, and `bench-compare` warns when the two runs differ in surface, so a flat-vs-textured comparison is explicit. `--indirect-validation on|off` (default `off` in release, ADR-0015) switches wgpu's per-draw indirect-argument validation; it is recorded as `content.indirect_validation` and `bench-compare` warns when the two runs differ. Reports from before 2026-11-03 ran with it on, so compare new runs against them only with `--indirect-validation on`. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
 
 ### Fairness guards built into the tool
 

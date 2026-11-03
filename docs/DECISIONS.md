@@ -57,3 +57,11 @@ The new repo starts from one bootstrap commit. Decaf and Lemon keep their histor
 ## ADR-0014 Block textures: 16 px texture array with world-space UVs (Proposed, 2026-11-03)
 
 Concept in `docs/TEXTURES.md`. One `Rgba8UnormSrgb` 2D array (16 × 16, 5 mips, `Repeat`), layer looked up per vertex from a `block_faces` storage buffer, one sample per fragment, texel-snapped linear + anisotropic filtering, per-voxel rotation from an ALU hash. `PackedQuad` is unchanged. Alternatives: 32 px array (same pipeline, 4× texels), flat colour + ALU noise (no fetches). Atlas rejected: greedy quads need per-block repeat, which an atlas cannot do without breaking mips. Art direction chosen by Noah on 2026-11-03: crisp 16 px. Still to decide with: opaque-pass GPU ms flat vs textured on Noah's GPU (`default`, `far`), budget +10%.
+
+## ADR-0015 wgpu indirect-draw validation off in release (Accepted, 2026-11-03)
+
+Context: wgpu 30 keeps `InstanceFlags::VALIDATION_INDIRECT_CALL` on in release builds. With it, `multi_draw_indirect` does per-draw CPU work in wgpu-core (`DrawBatcher::add` per draw) plus a validation dispatch, so frame CPU record grew ~30 ns per draw (computed) although we record one call (backlog B-02).
+Decision: release builds create the instance with the flag off (`IndirectValidation::for_build`); debug builds keep it on. With it off, D3D12 is excluded from the backends, because wgpu then drops `first_vertex`/`first_instance` from the vertex builtins on D3D12 and the terrain shader depends on both. `TerrainRenderer::upload_static` builds every indirect argument in range by construction and checks it with a `debug_assert`. `vx bench` and `vx --screenshot` take `--indirect-validation on|off` to measure the switch.
+Alternatives: keep validation (costs 0.28 ms of CPU per frame at `default` and 1.09 ms at `far`, measured); emit fewer draws first (B-06 does that too, but the per-draw cost would remain); keep D3D12 with validation on (possible later via a per-backend instance if a Windows machine lacks Vulkan).
+Decided by (measured, `noah-msi-rtx2060`, `docs/PERFORMANCE.md`): frame CPU record −81% at `default` (two runs) and −94% at `far`, FASTER; GPU terrain pass within noise everywhere; screenshots byte-identical with the flag on and off on the RTX 2060 (Vulkan) and lavapipe.
+

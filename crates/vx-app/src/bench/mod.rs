@@ -47,7 +47,7 @@ impl BenchOptions {
             width: 1920,
             height: 1080,
             shading: Shading::Textured,
-            indirect_validation: IndirectValidation::On,
+            indirect_validation: IndirectValidation::for_build(),
             out: None,
         }
     }

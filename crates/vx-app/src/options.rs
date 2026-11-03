@@ -61,7 +61,7 @@ impl Options {
             vsync: false,
             shading: Shading::Textured,
             screenshot_view: None,
-            indirect_validation: IndirectValidation::On,
+            indirect_validation: IndirectValidation::for_build(),
         };
         let mut pending = Vec::new();
         match args.next().as_deref() {

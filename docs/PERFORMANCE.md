@@ -100,6 +100,32 @@ Every chunk is still drawn, so these GPU times show the cost of drawing occluded
 
 The run-2 encode and wall changes come from one outlier base run (frame wall 1,020 µs against 1,221–1,242 µs in the other three `default` runs). The `far` world-generation flag is just past the noise band and not repeated in `default`. Its only plausible source was a refactor of `TerrainGenerator::surface_heights` through a new `surface_height_at`; that refactor was reverted before merge, so the merged generation loop is the measured base code plus one per-chunk `Option` check. The reverted state was not re-measured.
 
+## B-02 wgpu indirect validation on vs off: `noah-msi-rtx2060` (2026-11-03)
+
+- **Build:** commit `2ea1cabb2dac` (PR #12 before the default changed), release, one binary for every run, built in a clean worktree.
+- **Machine:** as in the hardware baseline (driver 616.92, AC power, High performance plan). Nothing else running.
+- **Command:** `vx bench --scenario <s> --shading flat --indirect-validation on|off`, default settings (5 repeats, 120 warm-up + 600 measured frames, 1920×1080), on and off back to back; `default` twice, plus one `--shading textured` pair.
+- **Raw files:** on the MSI in `D:\RustProjects\reworked_voxel_engine\bench-b02\` (not committed).
+
+### Timings (measured; `vx bench-compare` on → off, median of repeat medians, noise band in brackets)
+
+| Metric | `small` (2,506 draws) | `default` run 1 (9,492) | `default` run 2 | `far` (36,275) | `default` textured |
+|---|---|---|---|---|---|
+| Frame CPU encode | 230.6 → 63.9 µs, FASTER (36%) | 437.2 → 148.4 µs, FASTER (15%) | 428.1 → 150.9 µs, FASTER (14%) | 1,260.9 → 165.1 µs, FASTER (14%) | 432.9 → 165.5 µs, FASTER (13%) |
+| of which record | 147.1 → 25.7 µs, FASTER | 341.2 → 64.3 µs, FASTER | 335.2 → 63.2 µs, FASTER | 1,165.8 → 76.0 µs, FASTER | 338.0 → 76.3 µs, FASTER |
+| of which submit | 65.6 → 32.1 µs, FASTER (31%) | 75.0 → 66.9 µs, FASTER (7%) | 71.9 → 66.7 µs, FASTER (6%) | 72.2 → 68.0 µs, within noise | 73.3 → 68.5 µs, FASTER (6%) |
+| Frame GPU terrain pass | 274.1 → 166.7 µs, within noise (85%) | 511.2 → 512.3 µs, within noise | 516.6 → 523.5 µs, within noise | 1,770.2 → 1,793.3 µs, within noise | 571.4 → 584.7 µs, within noise |
+| Frame wall | 802.2 → 369.2 µs, FASTER (44%) | 1,232.9 → 939.1 µs, FASTER (12%) | 1,227.8 → 949.4 µs, FASTER (11%) | 3,340.9 → 2,236.6 µs, FASTER (3%) | 1,290.8 → 1,009.3 µs, FASTER (11%) |
+
+World generation and upload were within noise in every pair; meshing too, except `far` (+2.4%, noise 2.2%, SLOWER), which the switch cannot affect (render-only) and is treated as run-to-run drift. `small` is noisy on this laptop (31–85% bands). Content hashes are identical on and off.
+
+Findings:
+
+- With validation on, frame CPU record grows ~30 ns per draw (computed: (1,165.8 − 147.1) µs / (36,275 − 2,506) draws). With it off, record is 26–76 µs (measured) at every draw count.
+- The GPU terrain pass does not change, so the validation dispatch costs no measurable GPU time here.
+- Screenshots with validation on and off are byte-identical on the RTX 2060 (`default` 0.1, `cave` 0.4, `far` 0.3, SHA-256) and on lavapipe.
+- Decision: off in release, ADR-0015. The `noah-msi-rtx2060` baseline above ran with it on; compare against it with `--indirect-validation on`.
+
 ## Cloud VM reference (2026-11-03)
 
 - **Machine:** Intel Xeon @ 2.30 GHz VM, 4 vCPUs, 16 GiB, Ubuntu 24.04, rustc 1.97.1, no RUSTFLAGS.

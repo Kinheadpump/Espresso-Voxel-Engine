@@ -49,5 +49,5 @@ What we build next, in order of expected impact on the core goal (view distance 
 - The mesher is 1.1–1.2× faster than Lemon's on dense chunks (solid, checkerboard) but up to 7.7× on terrain. The dense path is dominated by building the column masks and emitting quads; it is worth profiling once streaming exists.
 - Quad counts differ slightly from Lemon and Decaf because of merge scan order: 5 more on random fill (42,169 vs 42,164) and 5 fewer on terrain (640 vs 645). This is negligible.
 - Greedy meshing can create T-junctions; a faint sub-pixel seam was visible in one headless frame. Check on the RTX 2060 before deciding whether it needs fixing (backlog B-10).
-- Frame CPU encode grows with draw count (~40–70 ns per draw, computed from the RTX 2060 baseline) although only one `multi_draw_indirect` is recorded. Backlog B-02.
+- ~~Frame CPU encode grows with draw count~~ Fixed 2026-11-03: wgpu's indirect-draw validation, now off in release (backlog B-02, ADR-0015).
 - Region build in the app is a fixed square; no streaming yet.
