@@ -50,8 +50,13 @@ fn face_texture(block: u32, direction: u32) -> u32 {
     return layer | (rotate << FACE_ROTATE_BIT);
 }
 
-@vertex
-fn vs_main(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) chunk_slot: u32) -> VertexOut {
+struct QuadVertex {
+    world: vec3<f32>,
+    block: u32,
+    direction: u32,
+}
+
+fn quad_vertex(vertex_index: u32, chunk_slot: u32) -> QuadVertex {
     let quad = quads[vertex_index / 6u];
     let lo = quad.x;
     let hi = quad.y;
@@ -81,18 +86,38 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) ch
         depth_u_v.y + corner.x * size.x,
         depth_u_v.z + corner.y * size.y,
     );
-    let world = vec3<f32>(chunk_origins[chunk_slot].xyz) + vec3<f32>(local);
+    return QuadVertex(vec3<f32>(chunk_origins[chunk_slot].xyz) + vec3<f32>(local), block, direction);
+}
 
+@vertex
+fn vs_main(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) chunk_slot: u32) -> VertexOut {
+    let vertex = quad_vertex(vertex_index, chunk_slot);
     var out: VertexOut;
-    out.clip_position = camera.view_proj * vec4(world, 1.0);
-    out.world_position = world;
-    out.block = block;
-    out.direction = direction;
+    out.clip_position = camera.view_proj * vec4(vertex.world, 1.0);
+    out.world_position = vertex.world;
+    out.block = vertex.block;
+    out.direction = vertex.direction;
     out.face = 0u;
     if TEXTURED {
-        out.face = face_texture(block, direction);
+        out.face = face_texture(vertex.block, vertex.direction);
     }
     return out;
+}
+
+struct ChunkIdOut {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) @interpolate(flat) slot_plus_one: u32,
+}
+
+@vertex
+fn vs_chunk_id(@builtin(vertex_index) vertex_index: u32, @builtin(instance_index) chunk_slot: u32) -> ChunkIdOut {
+    let vertex = quad_vertex(vertex_index, chunk_slot);
+    return ChunkIdOut(camera.view_proj * vec4(vertex.world, 1.0), chunk_slot + 1u);
+}
+
+@fragment
+fn fs_chunk_id(in: ChunkIdOut) -> @location(0) u32 {
+    return in.slot_plus_one;
 }
 
 const BLOCK_COLORS = array<vec3<f32>, 6>(

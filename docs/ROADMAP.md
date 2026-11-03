@@ -16,7 +16,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 
 ## Next: solid foundation before features
 
-1. **Occlusion counters and scenarios** (`cave`, `mountain`, `fly-fast`; counter ladder frustum → graph → Hi-Z → quads submitted; culling-off image-identity check). Backlog B-01. Verify: scenarios deterministic (stable mesh hash), counters match a CPU recount.
+1. ~~**Occlusion counters and scenarios**~~ Done 2026-11-03 (backlog B-01): `cave`, `mountain`, `fly-fast` and the culling ladder `resident` → `frustum` → `frustum+facing` → `pixel-visible` in every `vx bench` report (`docs/BENCHMARKING.md`). The graph and Hi-Z rungs and the culling-off image-identity check land with the first real culler (items 9 and 11), because there is nothing to compare before that.
 2. **Windowed present-mode benchmark** (`vx bench --windowed`): the same orbit with a real swapchain, vsync off, recording frame pacing (p99, frame-time variance). The offscreen bench measures serialised per-frame cost and does not capture presentation or pipelining.
 3. **Extend GPU timestamps** to every pass as passes are added (cull, shadow, post). Keep one JSON metric per pass.
 4. **Peak memory and VRAM reporting**: peak RSS (Linux `VmHWM`, Windows `PeakWorkingSetSize`) and wgpu allocator reports, instead of current RSS only.

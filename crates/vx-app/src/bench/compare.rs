@@ -5,6 +5,7 @@ use anyhow::{Context, Result, bail};
 use super::{
     report::{BenchReport, SCHEMA_VERSION},
     stats::Metric,
+    visibility::VisibilityCounters,
 };
 
 const BYTES_PER_MIB: f64 = 1_048_576.0;
@@ -85,6 +86,33 @@ pub fn print_report(report: &BenchReport) {
             ),
             None => println!("{name:<30} {:>10}", "n/a"),
         }
+    }
+    if let Some(visibility) = &report.visibility {
+        print_culling_ladder(visibility);
+    }
+}
+
+fn print_culling_ladder(visibility: &VisibilityCounters) {
+    let Some(resident) = visibility.ladder.first() else {
+        return;
+    };
+    println!(
+        "\nculling ladder (mean of {} path frames, if culling stopped at each stage)",
+        visibility.sampled_frames
+    );
+    println!(
+        "{:<16} {:>10} {:>10} {:>12} {:>8}",
+        "stage", "chunks", "draws", "quads", "quads %"
+    );
+    for rung in &visibility.ladder {
+        println!(
+            "{:<16} {:>10.1} {:>10.1} {:>12.0} {:>7.1}%",
+            rung.stage,
+            rung.chunks,
+            rung.draws,
+            rung.quads,
+            100.0 * rung.quads / resident.quads.max(1.0)
+        );
     }
 }
 

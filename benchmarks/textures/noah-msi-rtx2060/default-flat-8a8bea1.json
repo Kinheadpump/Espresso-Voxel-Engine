@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "unix_time": 1793720194,
+  "build": {
+    "git_commit": "8a8bea163fc5",
+    "git_dirty": "false",
+    "profile": "release",
+    "debug_assertions": false,
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "rustflags": "none"
+  },
+  "system": {
+    "os": "Windows 11 Home",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "physical_cores": 6,
+    "logical_cores": 12,
+    "total_memory_mib": 16225
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 2060",
+    "backend": "Vulkan",
+    "device_type": "DiscreteGpu",
+    "driver": "NVIDIA",
+    "driver_info": "616.92",
+    "tier": "GpuDrivenWithCount",
+    "timestamps": true
+  },
+  "scenario": {
+    "name": "default",
+    "seed": 1337,
+    "view_radius": 16,
+    "vertical_chunks": 5,
+    "threads": 12,
+    "width": 1920,
+    "height": 1080,
+    "warmup_frames": 120,
+    "measured_frames": 600,
+    "repeats": 5,
+    "frame_sync": "offscreen, CPU waits for GPU completion every frame"
+  },
+  "content": {
+    "chunks_generated": 6125,
+    "chunks_meshed": 2826,
+    "quads": 986380,
+    "mesh_hash": "fab6872fe1853d8e",
+    "voxel_heap_bytes": 16843696,
+    "geometry_buffer_bytes": 8088128,
+    "draws": 9492,
+    "shading": "flat",
+    "texture_bytes": 0,
+    "texture_hash": ""
+  },
+  "results": {
+    "world_generation_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        184.0271,
+        183.60660000000001,
+        176.951,
+        181.16989999999998,
+        169.8135
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 169.8135,
+        "p50": 181.16989999999998,
+        "p90": 183.8589,
+        "p99": 184.01028,
+        "max": 184.0271,
+        "mean": 179.11362,
+        "stddev": 5.286333317300374
+      }
+    },
+    "meshing_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        66.8356,
+        73.4121,
+        70.025,
+        68.3437,
+        66.47630000000001
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 66.47630000000001,
+        "p50": 68.3437,
+        "p90": 72.05726,
+        "p99": 73.27661599999999,
+        "max": 73.4121,
+        "mean": 69.01854,
+        "stddev": 2.5298202106869145
+      }
+    },
+    "upload_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        8.3705,
+        8.2337,
+        7.8036,
+        7.664,
+        7.6613999999999995
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 7.6613999999999995,
+        "p50": 7.8036,
+        "p90": 8.31578,
+        "p99": 8.365028,
+        "max": 8.3705,
+        "mean": 7.9466399999999995,
+        "stddev": 0.2979155625340847
+      }
+    },
+    "frame_cpu_encode_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        334.35,
+        339.45000000000005,
+        344.9,
+        343.3,
+        341.90000000000003
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 290.5,
+        "p50": 340.4,
+        "p90": 368.90000000000003,
+        "p99": 465.70999999999975,
+        "max": 1804.4,
+        "mean": 345.0088000000005,
+        "stddev": 56.96974790091084
+      }
+    },
+    "frame_gpu_terrain_pass_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        530.4319999999999,
+        508.72,
+        507.904,
+        508.8,
+        542.768
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 487.84000000000003,
+        "p50": 512.56,
+        "p90": 559.5712,
+        "p99": 998.3689599999999,
+        "max": 1012.8959999999998,
+        "mean": 531.2931413333333,
+        "stddev": 75.39092310732566
+      }
+    },
+    "frame_wall_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        1002.1500000000001,
+        979.1999999999999,
+        986.95,
+        997.0999999999999,
+        1053.1
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 862.3,
+        "p50": 996.7000000000002,
+        "p90": 1072.1000000000001,
+        "p99": 1505.403,
+        "max": 2132.7,
+        "mean": 1016.6924333333342,
+        "stddev": 97.69304359103008
+      }
+    },
+    "process_resident_mib": 92.84765625
+  }
+}

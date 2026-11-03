@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "unix_time": 1793720222,
+  "build": {
+    "git_commit": "8a8bea163fc5",
+    "git_dirty": "false",
+    "profile": "release",
+    "debug_assertions": false,
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "rustflags": "none"
+  },
+  "system": {
+    "os": "Windows 11 Home",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "physical_cores": 6,
+    "logical_cores": 12,
+    "total_memory_mib": 16225
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 2060",
+    "backend": "Vulkan",
+    "device_type": "DiscreteGpu",
+    "driver": "NVIDIA",
+    "driver_info": "616.92",
+    "tier": "GpuDrivenWithCount",
+    "timestamps": true
+  },
+  "scenario": {
+    "name": "far",
+    "seed": 1337,
+    "view_radius": 32,
+    "vertical_chunks": 5,
+    "threads": 12,
+    "width": 1920,
+    "height": 1080,
+    "warmup_frames": 120,
+    "measured_frames": 600,
+    "repeats": 5,
+    "frame_sync": "offscreen, CPU waits for GPU completion every frame"
+  },
+  "content": {
+    "chunks_generated": 22445,
+    "chunks_meshed": 10858,
+    "quads": 3792695,
+    "mesh_hash": "4229b10348a4dc42",
+    "voxel_heap_bytes": 61458224,
+    "geometry_buffer_bytes": 31095688,
+    "draws": 36275,
+    "shading": "flat",
+    "texture_bytes": 0,
+    "texture_hash": ""
+  },
+  "results": {
+    "world_generation_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        626.3369,
+        635.5667000000001,
+        647.8347,
+        641.0327,
+        642.7855
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 626.3369,
+        "p50": 641.0327,
+        "p90": 645.81502,
+        "p99": 647.632732,
+        "max": 647.8347,
+        "mean": 638.7113,
+        "stddev": 7.324461969045899
+      }
+    },
+    "meshing_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        252.67319999999998,
+        257.667,
+        271.4224,
+        258.5859,
+        258.7137
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 252.67319999999998,
+        "p50": 258.5859,
+        "p90": 266.33892,
+        "p99": 270.91405199999997,
+        "max": 271.4224,
+        "mean": 259.81244,
+        "stddev": 6.21408821520905
+      }
+    },
+    "upload_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        48.2521,
+        47.6126,
+        46.4795,
+        46.2952,
+        46.2992
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 46.2952,
+        "p50": 46.4795,
+        "p90": 47.9963,
+        "p99": 48.22652,
+        "max": 48.2521,
+        "mean": 46.98772,
+        "stddev": 0.8001328774647365
+      }
+    },
+    "frame_cpu_encode_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        1250.75,
+        1256.4499999999998,
+        1256.35,
+        1253.8,
+        1253.85
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 1083.2,
+        "p50": 1254.3999999999999,
+        "p90": 1423.4,
+        "p99": 1662.9209999999973,
+        "max": 3219.4,
+        "mean": 1291.8433333333335,
+        "stddev": 111.78415777241827
+      }
+    },
+    "frame_gpu_terrain_pass_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        1768.624,
+        1777.664,
+        1769.472,
+        1769.472,
+        1769.472
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 1742.848,
+        "p50": 1769.7920000000001,
+        "p90": 1807.6704,
+        "p99": 1884.1628799999999,
+        "max": 2052.224,
+        "mean": 1777.727893333334,
+        "stddev": 31.15111897657326
+      }
+    },
+    "frame_wall_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        3313.2,
+        3363.75,
+        3339.1499999999996,
+        3328.95,
+        3314.0
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 2987.1,
+        "p50": 3329.8499999999995,
+        "p90": 3502.11,
+        "p99": 3763.273999999998,
+        "max": 5323.6,
+        "mean": 3357.1890333333313,
+        "stddev": 126.93904614577372
+      }
+    },
+    "process_resident_mib": 135.3125
+  }
+}
