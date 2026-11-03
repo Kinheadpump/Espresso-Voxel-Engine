@@ -67,12 +67,18 @@ impl Scenario {
         }
     }
 
-    pub fn view_radius(self) -> u32 {
+    /// View distance in blocks; the same for every `CHUNK_SIZE` so chunk sizes compare at equal reach.
+    pub fn view_distance_blocks(self) -> u32 {
         match self {
-            Self::Small => 8,
-            Self::Default | Self::Cave | Self::Mountain | Self::FlyFast => 16,
-            Self::Far => 32,
+            Self::Small => 256,
+            Self::Default | Self::Cave | Self::Mountain | Self::FlyFast => 512,
+            Self::Far => 1024,
         }
+    }
+
+    pub fn view_radius(self) -> u32 {
+        let chunk = CHUNK_SIZE as u32;
+        (self.view_distance_blocks() + chunk / 2) / chunk
     }
 
     pub fn terrain_settings(self) -> TerrainSettings {
@@ -93,7 +99,7 @@ impl Scenario {
 
     /// Camera at `progress` in `[0, 1)` along the scenario's fixed path.
     pub fn camera_at(self, terrain: &TerrainGenerator, progress: f32) -> FlyCamera {
-        let half_extent = self.view_radius() as f32 * CHUNK_SIZE as f32;
+        let half_extent = self.view_distance_blocks() as f32;
         match self.camera_path() {
             CameraPath::Orbit => orbit_camera(half_extent * 0.5, progress),
             CameraPath::Tunnel => tunnel_camera(progress),
@@ -196,7 +202,7 @@ mod tests {
     fn orbit_path_matches_the_original_benchmark() {
         let camera =
             Scenario::Default.camera_at(&TerrainGenerator::new(TerrainSettings::default()), 0.25);
-        let expected = orbit_camera(16.0 * 32.0 * 0.5, 0.25);
+        let expected = orbit_camera(256.0, 0.25);
         assert_eq!(camera.position, expected.position);
         assert!((camera.position - Vec3::new(0.0, ORBIT_HEIGHT, 256.0)).length() < 1e-3);
     }

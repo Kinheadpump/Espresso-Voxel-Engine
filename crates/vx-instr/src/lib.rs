@@ -1,12 +1,17 @@
 //! Deterministic inputs for the instruction-count benches.
 
-use vx_core::{BlockId, ChunkPos, PADDED_SIZE, padded_index};
+use vx_core::{BlockId, CHUNK_SIZE_I32, ChunkPos, PADDED_SIZE, padded_index};
 use vx_mesh::{PaddedVoxels, new_padded_voxels};
 use vx_world::{
     ChunkVoxels, ChunkWindow, TerrainGenerator, TerrainSettings, gather_padded, new_dense_chunk,
 };
 
-pub const SURFACE_CHUNK: ChunkPos = ChunkPos::new(3, 2, -5);
+/// The chunk holding block (96, 64, -160): sea level, so it mixes air, grass, dirt and stone at any `CHUNK_SIZE`.
+pub const SURFACE_CHUNK: ChunkPos = ChunkPos::new(
+    96i32.div_euclid(CHUNK_SIZE_I32),
+    64i32.div_euclid(CHUNK_SIZE_I32),
+    (-160i32).div_euclid(CHUNK_SIZE_I32),
+);
 
 pub fn surface_neighbourhood() -> ChunkWindow<ChunkVoxels> {
     let generator = TerrainGenerator::new(TerrainSettings::default());

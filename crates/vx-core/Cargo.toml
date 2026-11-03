@@ -6,6 +6,9 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[features]
+chunk62 = []
+
 [dependencies]
 glam.workspace = true
 bytemuck.workspace = true

@@ -19,6 +19,7 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+      - run: cargo test --workspace --features vx-core/chunk62
       - run: cargo bench -p vx-mesh -p vx-world --bench mesh --bench world -- --sample-count 20
 
   legacy-compare:

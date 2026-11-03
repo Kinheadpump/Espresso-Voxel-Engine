@@ -80,7 +80,7 @@ impl ChunkVoxels {
 
 impl PackedVoxels {
     fn word_count(bits_per_voxel: u32) -> usize {
-        CHUNK_VOLUME * bits_per_voxel as usize / 64
+        (CHUNK_VOLUME * bits_per_voxel as usize).div_ceil(64)
     }
 
     fn bits_for_palette_len(len: usize) -> u32 {
@@ -177,6 +177,24 @@ impl PackedVoxels {
                 word >>= bits;
             }
         }
+        if !CHUNK_VOLUME.is_multiple_of(64) {
+            let decoded_by_full_words = CHUNK_VOLUME / per_word * per_word;
+            self.decode_tail(&mut out[decoded_by_full_words..]);
+        }
+    }
+
+    #[cold]
+    fn decode_tail(&self, tail: &mut [BlockId]) {
+        let Some(&last_word) = self.words.last() else {
+            return;
+        };
+        let bits = self.bits_per_voxel;
+        let mask = (1u64 << bits) - 1;
+        let mut word = last_word;
+        for slot in tail {
+            *slot = self.palette[(word & mask) as usize];
+            word >>= bits;
+        }
     }
 }
 
@@ -243,7 +261,7 @@ mod tests {
         assert_eq!(voxels.get(LocalPos::new(0, 0, 0)), BlockId::AIR);
         assert_eq!(
             voxels.heap_bytes(),
-            CHUNK_VOLUME / 8 + 2 * size_of::<BlockId>()
+            CHUNK_VOLUME.div_ceil(64) * 8 + 2 * size_of::<BlockId>()
         );
     }
 }

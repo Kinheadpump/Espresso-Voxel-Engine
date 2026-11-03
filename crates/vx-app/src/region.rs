@@ -1,13 +1,15 @@
 use std::time::{Duration, Instant};
 
 use rayon::prelude::*;
-use vx_core::{BlockId, ChunkPos};
+use vx_core::{BlockId, CHUNK_SIZE, ChunkPos};
 use vx_mesh::{BinaryGreedyMesher, ChunkMesh, new_padded_voxels};
 use vx_world::{
     ChunkVoxels, ChunkWindow, TerrainGenerator, TerrainSettings, gather_padded, new_dense_chunk,
 };
 
-pub const VERTICAL_CHUNKS: std::ops::Range<i32> = 0..5;
+pub const WORLD_HEIGHT_BLOCKS: usize = 160;
+pub const VERTICAL_CHUNKS: std::ops::Range<i32> =
+    0..WORLD_HEIGHT_BLOCKS.div_ceil(CHUNK_SIZE) as i32;
 
 pub struct MeshedRegion {
     pub meshes: Vec<(ChunkPos, ChunkMesh)>,

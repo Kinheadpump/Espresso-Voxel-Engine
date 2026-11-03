@@ -122,7 +122,7 @@ fn aabb_in_frustum(planes: &[Vec4; 5], min: Vec3, max: Vec3) -> bool {
 }
 
 /// True if at least one face of this direction inside the chunk can face the eye.
-/// Positive faces of a chunk lie on planes `min+1 ..= min+32`, negative ones on `min ..= min+31`.
+/// Positive faces of a chunk lie on planes `min+1 ..= min+CHUNK_SIZE`, negative ones on `min ..= min+CHUNK_SIZE-1`.
 fn direction_may_face(dir: FaceDir, chunk_min: Vec3, eye: Vec3) -> bool {
     let axis = dir.axis().index();
     let eye_on_axis = eye[axis];
@@ -215,12 +215,12 @@ mod tests {
         assert!(direction_may_face(
             FaceDir::NegY,
             chunk_min,
-            Vec3::new(0.0, 30.5, 0.0)
+            Vec3::new(0.0, CHUNK_EXTENT - 1.5, 0.0)
         ));
         assert!(!direction_may_face(
             FaceDir::NegY,
             chunk_min,
-            Vec3::new(0.0, 31.0, 0.0)
+            Vec3::new(0.0, CHUNK_EXTENT - 1.0, 0.0)
         ));
     }
 

@@ -15,7 +15,7 @@ impl ChunkPos {
 
     #[inline]
     pub fn containing_block(world_block: IVec3) -> Self {
-        Self(world_block >> CHUNK_SIZE.trailing_zeros() as i32)
+        Self(world_block.div_euclid(IVec3::splat(CHUNK_SIZE_I32)))
     }
 
     #[inline]
@@ -62,7 +62,7 @@ impl LocalPos {
 
     #[inline]
     pub fn of_world_block(world_block: IVec3) -> Self {
-        let local = world_block & (CHUNK_SIZE_I32 - 1);
+        let local = world_block.rem_euclid(IVec3::splat(CHUNK_SIZE_I32));
         Self::new(local.x as u8, local.y as u8, local.z as u8)
     }
 
@@ -99,17 +99,18 @@ mod tests {
 
     #[test]
     fn containing_block_floors_negative_coordinates() {
+        let size = CHUNK_SIZE_I32;
         assert_eq!(
-            ChunkPos::containing_block(IVec3::new(-1, 0, 31)),
+            ChunkPos::containing_block(IVec3::new(-1, 0, size - 1)),
             ChunkPos::new(-1, 0, 0)
         );
         assert_eq!(
-            ChunkPos::containing_block(IVec3::new(32, -33, -32)),
+            ChunkPos::containing_block(IVec3::new(size, -size - 1, -size)),
             ChunkPos::new(1, -2, -1)
         );
         assert_eq!(
-            LocalPos::of_world_block(IVec3::new(-1, 32, -33)),
-            LocalPos::new(31, 0, 31)
+            LocalPos::of_world_block(IVec3::new(-1, size, -size - 1)),
+            LocalPos::new((size - 1) as u8, 0, (size - 1) as u8)
         );
     }
 
