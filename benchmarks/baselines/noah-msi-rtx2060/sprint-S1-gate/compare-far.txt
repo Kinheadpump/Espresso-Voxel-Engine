@@ -1,0 +1,12 @@
+baseline : benchmarks\baselines\noah-msi-rtx2060\sprint-S1-start\far-7cf5ed4fd962.json (7cf5ed4fd962)
+candidate: ..\out\far.json (fbdc3d99a264)
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                   618.9ms     559.3ms    -9.6%    5.3%  FASTER
+meshing                            253.8ms     232.8ms    -8.3%    8.4%  within noise
+upload                              46.1ms      47.1ms    +2.2%    3.8%  within noise
+frame CPU encode                   162.3us     166.4us    +2.5%   13.0%  within noise
+  of which record                   74.1us      76.9us    +3.8%   18.3%  within noise
+  of which submit                   67.9us      68.9us    +1.5%    6.0%  within noise
+frame GPU terrain pass            1771.5us    1751.6us    -1.1%    2.0%  within noise
+frame wall (CPU+GPU, synced)      2208.3us    2192.8us    -0.7%    3.0%  within noise

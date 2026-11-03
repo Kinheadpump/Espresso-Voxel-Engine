@@ -1,0 +1,12 @@
+baseline : ..\out\windowed-default-run1.json (fbdc3d99a264)
+candidate: ..\out\windowed-default-run2.json (fbdc3d99a264)
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                   178.9ms     161.3ms    -9.8%    5.6%  FASTER
+meshing                             67.9ms      63.0ms    -7.3%   13.9%  within noise
+upload                               8.5ms       7.5ms   -11.1%   20.7%  within noise
+frame CPU encode                   265.6us     392.6us   +47.8%   46.8%  SLOWER
+  of which record                   36.5us      57.0us   +56.4%   60.6%  within noise
+  of which submit                  211.4us     311.0us   +47.1%   43.0%  SLOWER
+frame GPU terrain pass                 n/a
+frame interval (present)           869.9us     885.2us    +1.8%    2.2%  within noise

@@ -30,6 +30,8 @@ The camera follows a fixed path per scenario, so every run renders exactly the s
 | `frame_gpu_terrain_pass_us` | n/a (reading timestamps back would reintroduce the per-frame wait) |
 | `visibility` | n/a (the offscreen run reports it) |
 
+Repeatability on `noah-msi-rtx2060`: the interval center repeats within ~2%; CPU encode/submit in this mode swing ~47% (measured, `docs/PERFORMANCE.md`), so judge windowed changes on the interval only.
+
 The report also prints a pacing line: p50, p99, max, standard deviation and p99/p50 of the interval. `bench-compare` refuses to compare a windowed run with an offscreen one because `frame_sync` differs. Keep the window in focus and the machine idle: the compositor and other windows are part of what this mode measures.
 
 ### Scenarios
@@ -46,6 +48,10 @@ The report also prints a pacing line: p50, p99, max, standard deviation and p99/
 `cave` uses its own terrain (the default heightmap plus the carved tunnel, `TerrainSettings::carved_air`), so its mesh hash differs from the other scenarios. The other five share the `default` heightmap. `vx --screenshot out.png --scenario cave --at 0.3` renders one frame of any scenario's path for a visual check.
 
 Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. `--shading flat|textured` (default `flat`, the mode of every baseline) picks the terrain surface; the report records it with the texture hash. `bench-compare` refuses two runs with different shading or textures unless `--allow-shading-change` is passed, so a flat-vs-textured comparison is always deliberate. `--indirect-validation on|off` (default `off` in release, ADR-0015) switches wgpu's per-draw indirect-argument validation; it is recorded as `content.indirect_validation` and `bench-compare` warns when the two runs differ. Reports from before 2026-11-03 ran with it on, so compare new runs against them only with `--indirect-validation on`. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
+
+### Per-pass GPU metrics
+
+Each render pass gets one timestamp pair and one metric, `results.frame_gpu_<pass>_pass_us` (µs, `Option`, `null` when the adapter has no timestamp queries), added in the same PR as the pass and listed by `bench-compare`. Today only `terrain` exists. (SPRINTS.md names the convention `gpu_<pass>_ms`; the shipped field is in µs and the name keeps the existing schema.)
 
 ### Fairness guards built into the tool
 
@@ -138,6 +144,14 @@ Run both on the same machine and session, back to back, with the same settings. 
 | `bench_frame` / `frame` + frame mark | one per frame in `vx bench` / `vx run` | main |
 
 Never put Tracy-on numbers into a baseline or Stats section: the zones cost real time per call.
+
+## Instruction-count benches (CI regression signal)
+
+`cargo bench-instr` runs `crates/vx-instr/benches/instructions.rs` under Callgrind via gungraun: mesher (surface and checkerboard chunks), generation of one surface chunk, palette decode and padded gather. It needs Valgrind and `cargo install gungraun-runner --version 0.20.0 --locked`. Instruction counts do not depend on load, so they work on shared CI runners where wall-clock spread is 12–28% (measured, cloud VM).
+
+The CI job `instruction-counts` saves a baseline on the PR's base commit, then runs the PR head with `--baseline=base --callgrind-limits='ir=1%'` and fails on any benchmark whose instruction count (`Ir`) grows by more than 1%. Locally: `cargo bench-instr -- --save-baseline=before`, change the code, `cargo bench-instr -- --baseline=before`.
+
+Two back-to-back runs on the same build gave identical counts (measured 2026-11-03, cloud container, Xeon @ 2.1 GHz, Valgrind 3.22). A deliberate doubling of the mesher work was caught (+98% `Ir`, exit code 3). Counts are a proxy: they miss cache and memory-bound effects, so a speed-up still needs a `vx bench` number.
 
 ## Reporting rules
 

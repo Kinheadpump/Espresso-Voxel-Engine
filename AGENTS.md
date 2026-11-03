@@ -14,6 +14,7 @@ A performance-first blocky voxel engine in Rust on wgpu. It is the third attempt
 | `crates/vx-world` | Palette chunk storage, ring-buffer `ChunkWindow`, terrain generator, padded-neighbour gather | vx-core, fastnoise-lite |
 | `crates/vx-mesh` | Binary greedy mesher, 8-byte `PackedQuad`, culled reference mesher for tests | vx-core |
 | `crates/vx-render` | wgpu device/tier negotiation, terrain pipeline (vertex pulling + multi-draw indirect), camera, offscreen target | vx-core, vx-mesh, wgpu |
+| `crates/vx-instr` | Instruction-count benches (gungraun on Valgrind) and their fixed inputs; CI fails on a >1% `Ir` regression vs the base branch | vx-core, vx-world, vx-mesh |
 | `crates/vx-app` | `vx` binary: winit window, region build on rayon, headless `--probe` / `--screenshot` | all |
 | `tools/legacy-compare` | Standalone crate: Decaf and Lemon meshers vs ours on identical input (not a workspace member) | vx-core, vx-world, vx-mesh |
 | `scripts/` | `bench-baseline.sh` / `.ps1` hardware baseline runs | |
@@ -33,6 +34,7 @@ cargo test --workspace
 cargo lint                            # clippy pedantic, -D warnings
 cargo fmt-check
 cargo bench-cpu                       # divan benches for mesh + world
+cargo bench-instr                     # gungraun instruction counts (needs valgrind + gungraun-runner 0.20.0)
 cargo run --release -- bench --scenario default --out base.json   # end-to-end benchmark (docs/BENCHMARKING.md)
 cargo run --release -- bench-compare base.json candidate.json     # noise-aware comparison
 ```

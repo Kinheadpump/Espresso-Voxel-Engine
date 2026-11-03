@@ -17,11 +17,11 @@ What we build next, in order of expected impact on the core goal (view distance 
 ## Next: solid foundation before features
 
 1. ~~**Occlusion counters and scenarios**~~ Done 2026-11-03 (backlog B-01): `cave`, `mountain`, `fly-fast` and the culling ladder `resident` → `frustum` → `frustum+facing` → `pixel-visible` in every `vx bench` report (`docs/BENCHMARKING.md`). The graph and Hi-Z rungs and the culling-off image-identity check land with the first real culler (items 9 and 11), because there is nothing to compare before that.
-2. **Windowed present-mode benchmark** (`vx bench --windowed`): the same orbit with a real swapchain, vsync off, recording frame pacing (p99, frame-time variance). The offscreen bench measures serialised per-frame cost and does not capture presentation or pipelining. Tool landed 2026-11-03 (`vx bench --windowed`, `docs/BENCHMARKING.md`); still open: two `noah-msi-rtx2060` runs to set its repeatability threshold.
-3. **Extend GPU timestamps** to every pass as passes are added (cull, shadow, post). Keep one JSON metric per pass.
+2. ~~**Windowed present-mode benchmark**~~ Done 2026-11-03: `vx bench --windowed` (`docs/BENCHMARKING.md`). Two `noah-msi-rtx2060` runs set the repeatability threshold: frame interval within ~2% (`docs/PERFORMANCE.md`).
+3. **Extend GPU timestamps** to every pass as passes are added (cull, shadow, post). Keep one JSON metric per pass. Convention set 2026-11-03: `results.frame_gpu_<pass>_pass_us` (µs, like the existing terrain pass), added in the same PR as the pass.
 4. ~~**Peak memory and VRAM reporting**~~ Done 2026-11-03: `results.process_peak_resident_mib` (Linux `VmHWM`, Windows `PeakWorkingSetSize`) and `gpu_memory` (wgpu allocator report by resource label) in every `vx bench` report.
-5. ~~**Tracy behind a feature flag**~~ Done 2026-11-03: `--features tracy` via the `profiling` crate, zones listed in `docs/BENCHMARKING.md`. The Tracy-off no-change check is part of the S1 exit gate run on `noah-msi-rtx2060`.
-6. **CI regression signal**: instruction-count benches (gungraun or CodSpeed) for the mesher and generator, because wall-clock on shared runners is too noisy (measured 12–28% repeat spread on a cloud VM).
+5. ~~**Tracy behind a feature flag**~~ Done 2026-11-03: `--features tracy` via the `profiling` crate, zones listed in `docs/BENCHMARKING.md`. Feature off: every frame metric within noise of the S1 start baseline on `noah-msi-rtx2060` (`docs/PERFORMANCE.md`).
+6. ~~**CI regression signal**~~ Done 2026-11-03: `crates/vx-instr` gungraun benches (mesher, generator, decode, gather) and the `instruction-counts` CI job, failing on >1% `Ir` vs the base branch (`docs/BENCHMARKING.md`).
 
 ## Then: streaming core
 

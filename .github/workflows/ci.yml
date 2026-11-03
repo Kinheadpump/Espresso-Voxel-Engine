@@ -51,3 +51,24 @@ jobs:
             frame.png
             frame-flat.png
             bench-smoke.json
+
+  instruction-counts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.97
+      - uses: Swatinem/rust-cache@v2
+      - run: sudo apt-get update && sudo apt-get install -y valgrind
+      - run: cargo install gungraun-runner --version 0.20.0 --locked
+      - name: Record base-branch baseline
+        if: github.event_name == 'pull_request'
+        run: |
+          git checkout --quiet ${{ github.event.pull_request.base.sha }}
+          if [ -d crates/vx-instr ]; then
+            cargo bench -p vx-instr --bench instructions -- --save-baseline=base
+          fi
+          git checkout --quiet ${{ github.sha }}
+      - name: Instruction counts (fail on >1% Ir regression vs base)
+        run: cargo bench -p vx-instr --bench instructions -- --baseline=base --callgrind-limits='ir=1%'
