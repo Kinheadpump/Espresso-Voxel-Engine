@@ -91,7 +91,7 @@ Result: crisp texel edges up close, filtered mips at distance, one sample, a han
 | Piece | Where |
 |---|---|
 | Layer enum, `BlockFaces`, packed GPU table | `crates/vx-core/src/textures.rs` |
-| 16 px PNGs (committed, hand-editable; regenerate with `python3 tools/texture-concept/texgen.py assets/blocks 16`) | `assets/blocks/` |
+| 16 px PNGs (committed, hand-editable; revision 2, regenerate with `python3 tools/texture-concept/blocks.py assets/blocks`) | `assets/blocks/` |
 | Embedded decode, CPU sRGB-correct mips, array + sampler (linear, anisotropy 8, `Repeat`) | `crates/vx-render/src/block_textures.rs` |
 | Face lookup per vertex, world-space UVs, rotation hash, texel snap | `crates/vx-render/src/shaders/terrain.wgsl` |
 | `override TEXTURED` pipeline constant: flat and textured are separate pipelines, so the flat path is the old shader | `crates/vx-render/src/terrain.rs` |
@@ -99,9 +99,43 @@ Result: crisp texel edges up close, filtered mips at distance, one sample, a han
 
 The generator stays an offline Python tool instead of a Rust port: its output is committed and the engine never runs it, so porting it would add code without changing anything at runtime.
 
-Engine frames (lavapipe, `--radius 8` and a close-up): `textures/engine-overview-textured.png`, `textures/engine-closeup-textured.png`. Mesh hash is identical between flat and textured runs (checked with `vx bench`). Texture memory: 8 layers × 1,364 B = 10.7 KiB (reported by `vx bench`).
+Engine frames of revision 1 (lavapipe, `--radius 8` and a close-up): `textures/engine-overview-textured.png`, `textures/engine-closeup-textured.png`. Mesh hash is identical between flat and textured runs (checked with `vx bench`). Texture memory: 8 layers × 1,364 B = 10.7 KiB (reported by `vx bench`).
 
 Still to do:
 
 1. Anisotropy 4/8/16 comparison, and plain `Nearest` mag as the reference (only if a later change needs the headroom; `default` uses most of the budget).
 2. Gravel, log, planks once terrain generates them; leaves (alpha-tested) and water (transparent pass) with roadmap 17.
+
+## Revision 2: clean textures (2026-11-03)
+
+Noah found revision 1 grainy. Cause: the generator picked every texel independently from 4–6 shades (value noise plus per-texel random terms and dither), so neighbouring texels differed about as much as the whole texture did. At 16 px that reads as static, and greedy-merged walls repeat it over large areas. Filtering and mips were not the cause: the grain is in the source PNGs (see the tile sheet).
+
+Rules for revision 2 (`tools/texture-concept/blocks.py`):
+
+- No per-texel random values. Every feature is a cluster of at least 2 texels or a deliberate 1 px line.
+- 3–4 close shades per material, one dominant base shade, low-frequency regions for variation.
+- Structure instead of noise: stone is plates with 1 px seams and a bevel, dirt is a flat base with sparse 2 × 1 pebbles, grass is clumps and short blades, sand is two ripple lines, snow is near-flat.
+
+Graininess of the source tiles (computed by `blocks.py` from the PNGs; neighbour step = mean luminance difference between adjacent texels on a 0–255 scale, isolated = texels that differ by more than 4 from all four neighbours):
+
+| Texture | Neighbour step r1 | r2 | Isolated texels r1 | r2 |
+|---|---|---|---|---|
+| stone | 21.9 | 15.5 | 10% | 10% |
+| dirt | 20.9 | 5.9 | 33% | 1% |
+| grass_top | 29.4 | 7.8 | 32% | 5% |
+| grass_side | 23.8 | 7.8 | 34% | 5% |
+| sand | 22.8 | 3.8 | 38% | 2% |
+| snow | 7.2 | 1.9 | 12% | 0% |
+| snow_side | 28.8 | 16.6 | 36% | 3% |
+
+Stone keeps a high step on purpose: its seams are lines, not noise.
+
+![tiles](textures/rev2-tiles.png)
+
+Engine frames, same camera, before and after (lavapipe):
+
+![macro](textures/rev2-before-after-macro.png)
+
+![close](textures/rev2-before-after-close.png)
+
+Renderer, shader, layer count and texture size are unchanged, so texture memory stays 10.7 KiB and per-fragment work is identical; only the texel values and the texture hash change. GPU cost is re-checked on the RTX 2060 against the same +10% budget (`docs/PERFORMANCE.md`).
