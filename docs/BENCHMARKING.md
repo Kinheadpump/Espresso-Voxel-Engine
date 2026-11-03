@@ -14,6 +14,7 @@ How to measure the engine so that two runs can be compared fairly. Read this bef
 | Frame CPU encode | Camera upload, pass encoding and submit; also split into `record` (command encoder through `finish`) and `submit` (`queue.submit`) | `warmup` discarded frames + `frames` measured frames, `repeats` times |
 | Frame GPU terrain pass | GPU timestamp at the start and end of the terrain pass | same (only if the adapter supports timestamp queries) |
 | Frame wall | Encode + submit + wait for GPU completion | same |
+| Memory | Process resident memory after region build, peak resident memory over the run (Linux `VmHWM`, Windows `PeakWorkingSetSize`), and GPU memory from wgpu's allocator report (Vulkan and D3D12 only) grouped by resource label, taken after the timed frames while every buffer and render target is alive | once per run |
 
 The camera follows a fixed path per scenario, so every run renders exactly the same frames. The CPU waits for the GPU every frame. That serialises the work: the numbers are per-frame costs (latency), not pipelined throughput, and there is no vsync or compositor in the loop.
 

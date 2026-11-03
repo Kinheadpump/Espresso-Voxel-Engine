@@ -1,5 +1,6 @@
 mod compare;
 mod frames;
+mod memory;
 mod report;
 mod scenario;
 mod stats;
@@ -138,7 +139,9 @@ pub fn run(options: &BenchOptions) -> Result<()> {
                 .map(|repeats| Metric::from_repeats("us", &repeats)),
             frame_wall_us: Metric::from_repeats("us", &frames.wall),
             process_resident_mib,
+            process_peak_resident_mib: memory::peak_resident_mib(),
         },
+        gpu_memory: frames.gpu_memory.clone(),
         visibility: Some(visibility),
     };
     let path = options

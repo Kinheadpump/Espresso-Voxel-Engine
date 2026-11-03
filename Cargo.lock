@@ -2287,6 +2287,7 @@ dependencies = [
  "vx-render",
  "vx-world",
  "wgpu",
+ "windows-sys 0.61.2",
  "winit",
 ]
 

@@ -1,0 +1,297 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling windows-link v0.2.1
+   Compiling cfg_aliases v0.2.2
+   Compiling libm v0.2.16
+   Compiling autocfg v1.5.1
+   Compiling foldhash v0.2.0
+   Compiling cfg-if v1.0.5
+   Compiling thiserror v2.0.21
+   Compiling equivalent v1.0.3
+   Compiling bitflags v2.13.2
+   Compiling windows-strings v0.5.1
+   Compiling windows-result v0.4.1
+   Compiling khronos_api v3.1.0
+   Compiling log v0.4.35
+   Compiling hashbrown v0.17.1
+   Compiling zerocopy v0.8.63
+   Compiling windows-threading v0.2.1
+   Compiling libc v0.2.191
+   Compiling rustc-hash v1.1.0
+   Compiling indexmap v2.14.2
+   Compiling num-traits v0.2.19
+   Compiling xml-rs v0.8.29
+   Compiling naga v30.0.1
+   Compiling libloading v0.8.9
+   Compiling unicode-width v0.2.3
+   Compiling parking_lot_core v0.9.12
+   Compiling bit-vec v0.9.1
+   Compiling raw-window-handle v0.6.2
+   Compiling ash v0.38.0+1.3.281
+   Compiling codespan-reporting v0.13.1
+   Compiling gl_generator v0.14.0
+   Compiling bit-set v0.10.0
+   Compiling spirv v0.4.0+sdk-1.4.341.0
+   Compiling smallvec v1.16.4
+   Compiling scopeguard v1.2.0
+   Compiling memchr v2.8.3
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling allocator-api2 v0.2.21
+   Compiling once_cell v1.21.4
+   Compiling crossbeam-utils v0.8.23
+   Compiling arrayvec v0.7.8
+   Compiling khronos-egl v6.0.0
+   Compiling glutin_wgl_sys v0.6.1
+   Compiling static_assertions v1.1.0
+   Compiling hashbrown v0.16.1
+   Compiling lock_api v0.4.14
+   Compiling wgpu-hal v30.0.1
+   Compiling simd-adler32 v0.3.10
+   Compiling presser v0.3.1
+   Compiling parking_lot v0.12.5
+   Compiling ordered-float v5.5.1
+   Compiling crc32fast v1.5.4
+   Compiling renderdoc-sys v1.1.0
+   Compiling profiling v1.0.18
+   Compiling windows_x86_64_msvc v0.52.6
+   Compiling range-alloc v0.1.5
+   Compiling glow v0.17.0
+   Compiling adler2 v2.0.1
+   Compiling crossbeam-epoch v0.9.21
+   Compiling aho-corasick v1.1.5
+   Compiling wgpu-core v30.0.1
+   Compiling windows-sys v0.61.2
+   Compiling regex-syntax v0.8.11
+   Compiling crossbeam-deque v0.8.8
+   Compiling winapi v0.3.9
+   Compiling litrs v1.0.1
+   Compiling serde_core v1.0.229
+   Compiling document-features v0.2.12
+   Compiling miniz_oxide v0.9.1
+   Compiling bytemuck_derive v1.12.1
+   Compiling thiserror-impl v2.0.21
+   Compiling wgpu v30.0.1
+   Compiling once_cell_polyfill v1.70.2
+   Compiling zmij v1.0.23
+   Compiling regex-automata v0.4.18
+   Compiling anstyle v1.0.14
+   Compiling ntapi v0.4.3
+   Compiling rayon-core v1.13.0
+   Compiling anyhow v1.0.104
+   Compiling utf8parse v0.2.2
+   Compiling anstyle-parse v1.0.0
+   Compiling anstyle-wincon v3.0.11
+   Compiling flate2 v1.1.10
+   Compiling bytemuck v1.25.2
+   Compiling windows-implement v0.60.2
+   Compiling windows-interface v0.59.3
+   Compiling zerocopy-derive v0.8.63
+   Compiling naga-types v30.0.1
+   Compiling wgpu-types v30.0.1
+   Compiling glam v0.34.2
+   Compiling anstyle-query v1.1.5
+   Compiling windows-targets v0.52.6
+   Compiling windows-core v0.62.2
+   Compiling miniz_oxide v0.8.9
+   Compiling fdeflate v0.3.7
+   Compiling winit v0.30.13
+   Compiling serde v1.0.229
+   Compiling regex v1.13.1
+   Compiling serde_json v1.0.154
+   Compiling windows-numerics v0.3.1
+   Compiling windows-collections v0.3.2
+   Compiling windows-future v0.3.2
+   Compiling pin-project-lite v0.2.17
+   Compiling tracing-core v0.1.36
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling colorchoice v1.0.5
+   Compiling jiff-core v0.1.2
+   Compiling anstream v1.0.0
+   Compiling env_filter v2.0.0
+   Compiling tracing v0.1.44
+   Compiling windows v0.62.2
+   Compiling png v0.18.1
+   Compiling windows-sys v0.52.0
+   Compiling jiff v0.2.39
+   Compiling serde_derive v1.0.229
+   Compiling fastnoise-lite v1.1.1
+   Compiling unicode-segmentation v1.13.3
+   Compiling cursor-icon v1.2.0
+   Compiling itoa v1.0.18
+   Compiling dpi v0.1.2
+   Compiling smol_str v0.2.2
+   Compiling either v1.19.0
+   Compiling vx-app v0.1.0 (D:\RustProjects\reworked_voxel_engine\bench-s1\wt\crates\vx-app)
+   Compiling rayon v1.12.0
+   Compiling crossbeam-channel v0.5.17
+   Compiling pollster v0.4.0
+   Compiling env_logger v0.11.11
+   Compiling half v2.7.1
+   Compiling vx-core v0.1.0 (D:\RustProjects\reworked_voxel_engine\bench-s1\wt\crates\vx-core)
+   Compiling vx-mesh v0.1.0 (D:\RustProjects\reworked_voxel_engine\bench-s1\wt\crates\vx-mesh)
+   Compiling vx-world v0.1.0 (D:\RustProjects\reworked_voxel_engine\bench-s1\wt\crates\vx-world)
+   Compiling wgpu-naga-bridge v30.0.1
+   Compiling gpu-allocator v0.28.0
+   Compiling sysinfo v0.40.1
+   Compiling wgpu-core-deps-windows-linux-android v30.0.1
+   Compiling vx-render v0.1.0 (D:\RustProjects\reworked_voxel_engine\bench-s1\wt\crates\vx-render)
+    Finished `release` profile [optimized + debuginfo] target(s) in 3m 08s
+[2026-11-03T16:18:52Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:18:53Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+adapter: NVIDIA GeForce RTX 2060 | backend: Vulkan | type: DiscreteGpu | driver: NVIDIA 616.92
+tier: GpuDrivenWithCount | timestamps: true
+features: Features { features_wgpu: FeaturesWGPU(TIMESTAMP_QUERY_INSIDE_PASSES | MULTI_DRAW_INDIRECT_COUNT | SHADER_DRAW_INDEX), features_webgpu: FeaturesWebGPU(TIMESTAMP_QUERY | INDIRECT_FIRST_INSTANCE) }
+max_storage_buffer_binding_size: 2047 MiB | max_buffer_size: 1048576 MiB
+[2026-11-03T16:18:53Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:18:53Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:18:53Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 8
+[2026-11-03T16:18:54Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:18:55Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario small | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 1805 chunks generated, 748 meshed, 259091 quads, 2506 draws, hash 65d196ce12d01116 | shading flat (0.0 KiB textures) | voxel heap 4.7 MiB | geometry buffers 2.0 MiB | RSS 73 MiB
+metric                             center        p50        p99        max   spread
+world generation                     52.1       52.1       56.3       56.3    11.8%  [ms]
+meshing                              18.6       18.6       19.5       19.5     7.9%  [ms]
+upload                                2.8        2.8        3.0        3.0    11.9%  [ms]
+frame CPU encode                     65.4       65.6      143.1     1534.9    23.2%  [us]
+  of which record                    26.1       26.1       60.6      215.4    28.0%  [us]
+  of which submit                    32.8       32.9       72.7     1503.5    17.4%  [us]
+frame GPU terrain pass              167.2      171.8      346.1      355.2    84.7%  [us]
+frame wall (CPU+GPU, synced)        332.1      339.5      570.9     1551.5    54.3%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident              748.0     2506.0       259091   100.0%
+frustum               324.1     1057.4       109236    42.2%
+frustum+facing        197.9      577.0        75958    29.3%
+pixel-visible         161.1      481.7        66324    25.6%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/small-7cf5ed4fd962.json
+[2026-11-03T16:18:57Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:18:57Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:18:57Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T16:18:58Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:19:02Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario default | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 82 MiB
+metric                             center        p50        p99        max   spread
+world generation                    165.3      165.3      169.8      169.8     4.3%  [ms]
+meshing                              64.4       64.4       69.0       69.0     8.3%  [ms]
+upload                                7.3        7.3        8.1        8.1    12.6%  [ms]
+frame CPU encode                    143.4      146.2      310.7     1587.5    15.8%  [us]
+  of which record                    61.8       62.3      127.8     1212.9    24.4%  [us]
+  of which submit                    64.8       65.3      126.0     1493.8     7.3%  [us]
+frame GPU terrain pass              509.7      512.4      998.7     1012.2     7.4%  [us]
+frame wall (CPU+GPU, synced)        943.2      938.9     1426.4     2135.7    17.3%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9492.0       986380   100.0%
+frustum              1021.1     3402.0       352755    35.8%
+frustum+facing        640.2     1851.0       242105    24.5%
+pixel-visible         435.2     1296.4       183421    18.6%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/default-7cf5ed4fd962.json
+[2026-11-03T16:19:03Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:19:03Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:19:03Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 32
+[2026-11-03T16:19:08Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:19:17Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario far | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 22445 chunks generated, 10858 meshed, 3792695 quads, 36275 draws, hash 4229b10348a4dc42 | shading flat (0.0 KiB textures) | voxel heap 58.6 MiB | geometry buffers 29.7 MiB | RSS 123 MiB
+metric                             center        p50        p99        max   spread
+world generation                    618.9      618.9      631.6      631.9     5.3%  [ms]
+meshing                             253.8      253.8      268.2      268.6     8.0%  [ms]
+upload                               46.1       46.1       47.6       47.6     3.8%  [ms]
+frame CPU encode                    162.3      162.6      302.7     1483.7    12.8%  [us]
+  of which record                    74.1       74.0      143.8      271.4    17.8%  [us]
+  of which submit                    67.9       68.2      127.4     1390.0     6.0%  [us]
+frame GPU terrain pass             1771.5     1769.5     1847.8     1877.4     0.7%  [us]
+frame wall (CPU+GPU, synced)       2208.3     2207.1     2410.8     3315.1     3.0%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident            10858.0    36275.0      3792695   100.0%
+frustum              3656.0    12194.0      1274671    33.6%
+frustum+facing       2306.5     6589.0       866093    22.8%
+pixel-visible        1087.4     3235.0       484225    12.8%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/far-7cf5ed4fd962.json
+[2026-11-03T16:19:18Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:19:18Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:19:18Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T16:19:20Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:19:23Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario cave | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986480 quads, 9559 draws, hash c105e9031c73c4ce | shading flat (0.0 KiB textures) | voxel heap 16.2 MiB | geometry buffers 7.7 MiB | RSS 83 MiB
+metric                             center        p50        p99        max   spread
+world generation                    166.9      166.9      178.1      178.3     8.8%  [ms]
+meshing                              65.0       65.0       72.2       72.4    12.6%  [ms]
+upload                                7.3        7.3        7.7        7.7     5.8%  [ms]
+frame CPU encode                    145.1      153.1      296.4     1731.1    14.1%  [us]
+  of which record                    62.0       62.9      140.3      677.0    23.1%  [us]
+  of which submit                    66.3       67.3      153.2     1653.8     6.5%  [us]
+frame GPU terrain pass              460.4      462.5      594.1      970.4     2.8%  [us]
+frame wall (CPU+GPU, synced)        886.1      896.5     1167.6     1755.1     9.6%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9559.0       986480   100.0%
+frustum               955.5     3201.8       331539    33.6%
+frustum+facing        944.0     1520.4       108589    11.0%
+pixel-visible          17.4       54.1           75     0.0%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/cave-7cf5ed4fd962.json
+[2026-11-03T16:19:24Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:19:24Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:19:24Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T16:19:26Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:19:29Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario mountain | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 83 MiB
+metric                             center        p50        p99        max   spread
+world generation                    169.1      169.1      170.6      170.7     1.6%  [ms]
+meshing                              66.4       66.4       66.8       66.8     1.2%  [ms]
+upload                                7.4        7.4        7.9        7.9     8.1%  [ms]
+frame CPU encode                    144.2      151.3      331.3     1569.3    14.1%  [us]
+  of which record                    61.6       63.2      154.2      587.7    22.9%  [us]
+  of which submit                    65.2       66.2      144.4     1473.2     5.9%  [us]
+frame GPU terrain pass              479.2      481.2      998.1     1035.3     1.7%  [us]
+frame wall (CPU+GPU, synced)        911.8      911.6     1432.6     2118.7     9.7%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9492.0       986380   100.0%
+frustum               935.9     3117.1       327929    33.2%
+frustum+facing        591.6     1575.3       203986    20.7%
+pixel-visible          48.3      140.8        21573     2.2%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/mountain-7cf5ed4fd962.json
+[2026-11-03T16:19:30Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T16:19:30Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T16:19:30Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T16:19:32Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T16:19:35Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario fly-fast | commit 7cf5ed4fd962 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 84 MiB
+metric                             center        p50        p99        max   spread
+world generation                    171.5      171.5      175.6      175.7     3.3%  [ms]
+meshing                              67.8       67.8       68.1       68.1     2.3%  [ms]
+upload                                7.3        7.3        8.2        8.2    13.6%  [ms]
+frame CPU encode                    144.8      145.5      330.9     1638.0    14.2%  [us]
+  of which record                    62.2       62.2      150.8      354.7    21.1%  [us]
+  of which submit                    65.5       65.6      152.1     1553.2     6.3%  [us]
+frame GPU terrain pass              496.1      499.7     1081.2     1104.2     4.8%  [us]
+frame wall (CPU+GPU, synced)        919.7      910.7     1520.1     1789.7     8.4%  [us]
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9492.0       986380   100.0%
+frustum              1051.5     3513.2       369232    37.4%
+frustum+facing        667.8     1919.5       252356    25.6%
+pixel-visible         349.1     1040.7       152206    15.4%
+
+wrote benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/fly-fast-7cf5ed4fd962.json
+results in benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start
