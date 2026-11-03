@@ -1,6 +1,6 @@
 # Roadmap
 
-Ordered by expected impact on the core goal (view distance and frame time per watt), measurement infrastructure first. Each item names how it will be verified.
+Ordered by expected impact on the core goal (view distance and frame time per watt), measurement infrastructure first. Each item names how it will be verified. Unscheduled ideas from other engines, with their measurements, live in `docs/PROPOSALS.md`.
 
 ## Done (2026-11-03)
 
