@@ -30,6 +30,9 @@ env_logger = "0.11"
 anyhow = "1"
 divan = "0.1.21"
 png = "0.18.1"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sysinfo = { version = "0.40.1", default-features = false, features = ["system"] }
 naga = { version = "30.0.1", features = ["wgsl-in"] }
 
 [workspace.lints.rust]

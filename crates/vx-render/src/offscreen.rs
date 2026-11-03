@@ -46,6 +46,15 @@ impl OffscreenTarget {
         }
     }
 
+    pub fn color_view(&self) -> wgpu::TextureView {
+        self.color
+            .create_view(&wgpu::TextureViewDescriptor::default())
+    }
+
+    pub fn depth_view(&self) -> &wgpu::TextureView {
+        &self.depth_view
+    }
+
     pub fn render_rgba(
         &self,
         device: &wgpu::Device,
@@ -59,7 +68,7 @@ impl OffscreenTarget {
             label: Some("offscreen"),
         });
         {
-            let mut pass = begin_terrain_pass(&mut encoder, &color_view, &self.depth_view);
+            let mut pass = begin_terrain_pass(&mut encoder, &color_view, &self.depth_view, None);
             terrain.draw(&mut pass);
         }
         encoder.copy_texture_to_buffer(
@@ -122,6 +131,7 @@ pub fn begin_terrain_pass<'e>(
     encoder: &'e mut wgpu::CommandEncoder,
     color_view: &wgpu::TextureView,
     depth_view: &wgpu::TextureView,
+    timestamp_writes: Option<wgpu::RenderPassTimestampWrites<'_>>,
 ) -> wgpu::RenderPass<'e> {
     const SKY: wgpu::Color = wgpu::Color {
         r: 0.34,
@@ -148,7 +158,7 @@ pub fn begin_terrain_pass<'e>(
             }),
             stencil_ops: None,
         }),
-        timestamp_writes: None,
+        timestamp_writes,
         occlusion_query_set: None,
         multiview_mask: None,
     })

@@ -2,10 +2,17 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 
+use crate::bench::{BenchOptions, Scenario};
+
 pub enum Mode {
     Windowed,
     Probe,
     Screenshot(PathBuf),
+    Bench(BenchOptions),
+    Compare {
+        baseline: PathBuf,
+        candidate: PathBuf,
+    },
 }
 
 pub struct Options {
@@ -14,7 +21,24 @@ pub struct Options {
     pub vsync: bool,
 }
 
-const USAGE: &str = "usage: vx [--probe | --screenshot <file.png>] [--radius <chunks>] [--vsync]";
+const USAGE: &str = "usage:
+  vx [--radius <chunks>] [--vsync]                 windowed fly-cam
+  vx --probe                                       print adapter, tier, features
+  vx --screenshot <file.png> [--radius <chunks>]   headless single frame
+  vx bench [--scenario small|default|far] [--repeats N] [--frames N] [--warmup N]
+           [--threads N] [--resolution WxH] [--out <file.json>]
+  vx bench-compare <baseline.json> <candidate.json>";
+
+fn next_value<T: std::str::FromStr>(
+    args: &mut impl Iterator<Item = String>,
+    flag: &str,
+) -> Result<T> {
+    let raw = args
+        .next()
+        .with_context(|| format!("{flag} needs a value\n{USAGE}"))?;
+    raw.parse()
+        .map_err(|_| anyhow::anyhow!("invalid value {raw:?} for {flag}\n{USAGE}"))
+}
 
 impl Options {
     pub fn from_args(mut args: impl Iterator<Item = String>) -> Result<Self> {
@@ -23,19 +47,70 @@ impl Options {
             view_radius: 12,
             vsync: false,
         };
+        let mut pending = Vec::new();
+        match args.next().as_deref() {
+            Some("bench") => {
+                options.mode = Mode::Bench(parse_bench(args)?);
+                return Ok(options);
+            }
+            Some("bench-compare") => {
+                let baseline = args.next().context(USAGE)?.into();
+                let candidate = args.next().context(USAGE)?.into();
+                options.mode = Mode::Compare {
+                    baseline,
+                    candidate,
+                };
+                return Ok(options);
+            }
+            Some(first) => pending.push(first.to_owned()),
+            None => {}
+        }
+        let mut args = pending.into_iter().chain(args);
         while let Some(arg) = args.next() {
             match arg.as_str() {
                 "--probe" => options.mode = Mode::Probe,
                 "--screenshot" => {
-                    options.mode = Mode::Screenshot(args.next().context(USAGE)?.into());
+                    options.mode = Mode::Screenshot(next_value::<String>(&mut args, &arg)?.into());
                 }
-                "--radius" => {
-                    options.view_radius = args.next().context(USAGE)?.parse().context(USAGE)?;
-                }
+                "--radius" => options.view_radius = next_value(&mut args, &arg)?,
                 "--vsync" => options.vsync = true,
+                "--help" | "-h" => bail!("{USAGE}"),
                 _ => bail!("unknown argument {arg:?}\n{USAGE}"),
             }
         }
         Ok(options)
     }
+}
+
+fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
+    let mut bench = BenchOptions::for_scenario(Scenario::Default);
+    let mut overrides = Vec::new();
+    while let Some(arg) = args.next() {
+        match arg.as_str() {
+            "--scenario" => {
+                let name: String = next_value(&mut args, &arg)?;
+                bench = BenchOptions::for_scenario(Scenario::from_name(&name).context(USAGE)?);
+            }
+            "--repeats" | "--frames" | "--warmup" | "--threads" => {
+                overrides.push((arg.clone(), next_value::<u32>(&mut args, &arg)?));
+            }
+            "--resolution" => {
+                let raw: String = next_value(&mut args, &arg)?;
+                let (width, height) = raw.split_once('x').context(USAGE)?;
+                bench.width = width.parse().context(USAGE)?;
+                bench.height = height.parse().context(USAGE)?;
+            }
+            "--out" => bench.out = Some(next_value::<String>(&mut args, &arg)?.into()),
+            _ => bail!("unknown bench argument {arg:?}\n{USAGE}"),
+        }
+    }
+    for (flag, value) in overrides {
+        match flag.as_str() {
+            "--repeats" => bench.repeats = value.max(1),
+            "--frames" => bench.measured_frames = value.max(1),
+            "--warmup" => bench.warmup_frames = value,
+            _ => bench.threads = value.max(1),
+        }
+    }
+    Ok(bench)
 }

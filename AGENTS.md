@@ -15,7 +15,10 @@ A performance-first blocky voxel engine in Rust on wgpu. It is the third attempt
 | `crates/vx-mesh` | Binary greedy mesher, 8-byte `PackedQuad`, culled reference mesher for tests | vx-core |
 | `crates/vx-render` | wgpu device/tier negotiation, terrain pipeline (vertex pulling + multi-draw indirect), camera, offscreen target | vx-core, vx-mesh, wgpu |
 | `crates/vx-app` | `vx` binary: winit window, region build on rayon, headless `--probe` / `--screenshot` | all |
-| `docs/` | Architecture, decisions (ADRs), roadmap, performance log, history, research | |
+| `tools/legacy-compare` | Standalone crate: Decaf and Lemon meshers vs ours on identical input (not a workspace member) | vx-core, vx-world, vx-mesh |
+| `scripts/` | `bench-baseline.sh` / `.ps1` hardware baseline runs | |
+| `benchmarks/baselines/` | Committed reference runs per machine (`results/` is git-ignored scratch) | |
+| `docs/` | Architecture, decisions (ADRs), roadmap, benchmarking guide, performance log, history, research | |
 
 Rule: `vx-core`, `vx-world` and `vx-mesh` never depend on wgpu or winit, so CPU benches compile fast and run anywhere.
 
@@ -30,6 +33,8 @@ cargo test --workspace
 cargo lint                            # clippy pedantic, -D warnings
 cargo fmt-check
 cargo bench-cpu                       # divan benches for mesh + world
+cargo run --release -- bench --scenario default --out base.json   # end-to-end benchmark (docs/BENCHMARKING.md)
+cargo run --release -- bench-compare base.json candidate.json     # noise-aware comparison
 ```
 
 Headless GPU: install `mesa-vulkan-drivers` (lavapipe). It exposes every feature we use, so it validates the full path; its timings are meaningless for GPU performance.
@@ -49,7 +54,7 @@ Headless GPU: install `mesa-vulkan-drivers` (lavapipe). It exposes every feature
 1. Find the roadmap item in `docs/ROADMAP.md`, or add one.
 2. If it is a design choice with alternatives, write an ADR in `docs/DECISIONS.md` first (status Proposed), with the measurement that will decide it.
 3. Implement with tests. Hot-path changes need a divan bench or an end-to-end number.
-4. Measure in release before and after. Record in `docs/PERFORMANCE.md`.
+4. Measure in release before and after with `vx bench` + `vx bench-compare` on the same machine (`docs/BENCHMARKING.md`). Label every number measured / quoted / computed. Record in `docs/PERFORMANCE.md`.
 5. `cargo fmt --all && cargo lint && cargo test --workspace`.
 6. Conventional commit with the Stats section (see `CLAUDE.md`).
 

@@ -1,3 +1,4 @@
+mod bench;
 mod headless;
 mod options;
 mod region;
@@ -12,6 +13,11 @@ fn main() -> Result<()> {
     match &options.mode {
         Mode::Probe => headless::probe(),
         Mode::Screenshot(path) => headless::screenshot(&options, path),
+        Mode::Bench(bench_options) => bench::run(bench_options),
+        Mode::Compare {
+            baseline,
+            candidate,
+        } => bench::compare(baseline, candidate),
         Mode::Windowed => windowed::run(options),
     }
 }

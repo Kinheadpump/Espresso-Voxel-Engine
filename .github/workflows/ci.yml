@@ -21,6 +21,17 @@ jobs:
       - run: cargo test --workspace
       - run: cargo bench -p vx-mesh -p vx-world -- --sample-count 20
 
+  legacy-compare:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.97
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tools/legacy-compare
+      - run: cargo run --release
+        working-directory: tools/legacy-compare
+
   headless-render:
     runs-on: ubuntu-24.04
     steps:
@@ -30,7 +41,11 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y mesa-vulkan-drivers
       - run: cargo run --release -- --probe
       - run: cargo run --release -- --screenshot frame.png --radius 8
+      - run: cargo run --release -- bench --scenario small --repeats 3 --warmup 2 --frames 10 --resolution 320x180 --out bench-smoke.json
+      - run: cargo run --release -- bench-compare bench-smoke.json bench-smoke.json
       - uses: actions/upload-artifact@v4
         with:
           name: headless-frame
-          path: frame.png
+          path: |
+            frame.png
+            bench-smoke.json

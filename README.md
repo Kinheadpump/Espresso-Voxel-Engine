@@ -7,8 +7,9 @@ cargo run --release -- --radius 16       # fly-cam: click to grab mouse, WASD, S
 cargo run --release -- --screenshot out.png
 cargo probe                              # adapter, features, render tier
 cargo test --workspace && cargo bench-cpu
+cargo run --release -- bench          # reproducible benchmark, see docs/BENCHMARKING.md
 ```
 
 ![First headless frame (radius 12, lavapipe)](docs/first-frame.png)
 
-Start with `AGENTS.md`, then `docs/ARCHITECTURE.md`, `docs/ROADMAP.md` and `docs/PERFORMANCE.md`.
+Start with `AGENTS.md`, then `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/BENCHMARKING.md` and `docs/PERFORMANCE.md`.

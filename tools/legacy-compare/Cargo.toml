@@ -1,0 +1,25 @@
+[package]
+name = "legacy-compare"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+vx-core = { path = "../../crates/vx-core" }
+vx-world = { path = "../../crates/vx-world" }
+vx-mesh = { path = "../../crates/vx-mesh" }
+
+[dev-dependencies]
+divan = "0.1.21"
+
+[[bench]]
+name = "compare"
+harness = false
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+debug = "line-tables-only"
