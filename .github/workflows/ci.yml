@@ -19,7 +19,7 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
-      - run: cargo bench -p vx-mesh -p vx-world -- --sample-count 20
+      - run: cargo bench -p vx-mesh -p vx-world --bench mesh --bench world -- --sample-count 20
 
   headless-render:
     runs-on: ubuntu-24.04
