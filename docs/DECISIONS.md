@@ -45,3 +45,11 @@ Port Lemon's compute cull (frustum + per-direction back-face rejection + Hi-Z), 
 ## ADR-0011 Far terrain / LOD (Proposed, research)
 
 Candidates: meshed LOD rings with downsampled chunks (Distant Horizons style), or ray-marching a coarse brick map for the far field. Aokana (2025) reports 10¹⁰ voxels in ~6 ms but is read-only. Decide after the near field is GPU-driven and measured, with a prototype of each at the same view distance.
+
+## ADR-0012 Benchmark methodology (Accepted, 2026-11-03)
+
+One deterministic, offscreen scenario per scale (`small`, `default`, `far`), with a fixed seed, fixed camera orbit and fixed resolution. Warm-up is discarded, there are at least 3 repeats, and the CPU waits for the GPU every frame, so frame numbers are serialised per-frame cost. Each run stores its environment and a hash of the mesh output. `bench-compare` compares medians of per-repeat medians against a noise band of max(relative spread, 2%), and refuses debug builds or mismatched scenarios. Rationale: Decaf and Lemon recorded numbers that could not be reproduced or compared. A windowed present-mode bench is a later addition for frame pacing; it does not replace this.
+
+## ADR-0013 Repository history (Accepted, 2026-11-03)
+
+The new repo starts from one bootstrap commit. Decaf and Lemon keep their history in their own repos, and `docs/HISTORY.md` and the audits cite their commits by hash. Fair comparisons against legacy code use copies pinned to named commits in `tools/legacy-compare`.

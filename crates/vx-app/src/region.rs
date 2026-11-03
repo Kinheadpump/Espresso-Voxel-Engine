@@ -23,9 +23,9 @@ fn columns_within(radius: i32) -> impl Iterator<Item = ChunkPos> {
     })
 }
 
-pub fn build_region(view_radius: u32) -> MeshedRegion {
+pub fn build_region(view_radius: u32, terrain: TerrainSettings) -> MeshedRegion {
     let radius = view_radius as i32;
-    let generator = TerrainGenerator::new(TerrainSettings::default());
+    let generator = TerrainGenerator::new(terrain);
     let generate_started = Instant::now();
     let generated: Vec<(ChunkPos, ChunkVoxels)> = columns_within(radius + 1)
         .collect::<Vec<_>>()
@@ -89,8 +89,23 @@ pub fn build_region(view_radius: u32) -> MeshedRegion {
 }
 
 impl MeshedRegion {
+    pub fn quad_count(&self) -> usize {
+        self.meshes.iter().map(|(_, mesh)| mesh.quads.len()).sum()
+    }
+
+    pub fn content_hash(&self) -> u64 {
+        const FNV_OFFSET: u64 = 0xcbf2_9ce4_8422_2325;
+        const FNV_PRIME: u64 = 0x0100_0000_01b3;
+        let mix = |hash: u64, value: u64| (hash ^ value).wrapping_mul(FNV_PRIME);
+        self.meshes.iter().fold(FNV_OFFSET, |hash, (pos, mesh)| {
+            mesh.quads
+                .iter()
+                .fold(mix(hash, pos.packed_key()), |hash, quad| mix(hash, quad.0))
+        })
+    }
+
     pub fn log_summary(&self) {
-        let quads: usize = self.meshes.iter().map(|(_, mesh)| mesh.quads.len()).sum();
+        let quads = self.quad_count();
         log::info!(
             "region: {} chunks generated in {:.1} ms ({:.1} MiB voxel heap), {} non-empty meshes / {} quads ({:.1} MiB) in {:.1} ms on {} threads",
             self.generated_chunks,

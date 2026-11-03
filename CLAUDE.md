@@ -27,17 +27,17 @@ Build the most optimised voxel engine we can in Rust. Every change is judged by 
 
 - Work on the branch the session was given; never push to `main` directly.
 - After each successful, verified change: `cargo fmt --all`, `cargo lint`, `cargo test --workspace`, then commit and push yourself (no "run this" blocks for Noah).
-- Conventional Commits (`feat:`, `fix:`, `perf:`, `refactor:`, `docs:`, `test:`, `chore:`), English. The body ends with a Stats section. Use real numbers when the change touches performance, and `n/a` (never invented values) otherwise:
+- Conventional Commits (`feat:`, `fix:`, `perf:`, `refactor:`, `docs:`, `test:`, `chore:`), English. The body ends with a Stats section. Fill it from `vx bench-compare` (same machine, same session, verdict included) when the change touches performance, and `n/a` (never invented values) otherwise. Name the machine; software-GPU frame numbers never go into Stats:
 
 ```
 perf(mesh): replace scalar plane merge with bitmask runs
 
-Stats (release, <machine>, <command>):
-- Mesh surface chunk: 190 µs -> 37 µs
-- Gen surface chunk: n/a
-- Frame time p50/p99: n/a
-- VRAM: n/a
-- Chunks resident: n/a
+Stats (vx bench-compare, scenario default, <machine>; illustrative values):
+- Meshing: 71.8 ms -> 52.0 ms (-27.6%, noise 12%, FASTER)
+- World generation: within noise
+- Frame GPU terrain pass: n/a (software adapter)
+- Geometry buffers: 7.7 MiB -> 7.7 MiB
+- Content hash: unchanged
 ```
 
 ## Memory and docs discipline

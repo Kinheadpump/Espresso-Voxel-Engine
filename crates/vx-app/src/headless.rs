@@ -16,7 +16,7 @@ pub fn screenshot(options: &Options, path: &Path) -> Result<()> {
     const WIDTH: u32 = 1280;
     const HEIGHT: u32 = 720;
     let gpu = pollster::block_on(GpuContext::new(GpuContext::create_instance(), None))?;
-    let region = region::build_region(options.view_radius);
+    let region = region::build_region(options.view_radius, vx_world::TerrainSettings::default());
     region.log_summary();
 
     let mut terrain = TerrainRenderer::new(&gpu.device, OffscreenTarget::FORMAT);

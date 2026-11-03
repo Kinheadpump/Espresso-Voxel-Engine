@@ -29,6 +29,7 @@ struct UploadedGeometry {
     indirect: wgpu::Buffer,
     draw_count: u32,
     quad_count: u64,
+    buffer_bytes: u64,
 }
 
 pub struct TerrainRenderer {
@@ -111,12 +112,20 @@ impl TerrainRenderer {
                 },
             ],
         });
+        let buffer_bytes = quad_buffer.size() + origin_buffer.size() + indirect.size();
         self.geometry = Some(UploadedGeometry {
             bind_group,
+            buffer_bytes,
             indirect,
             draw_count: draws.len() as u32,
             quad_count: quads.len() as u64,
         });
+    }
+
+    pub fn geometry_buffer_bytes(&self) -> u64 {
+        self.geometry
+            .as_ref()
+            .map_or(0, |geometry| geometry.buffer_bytes)
     }
 
     pub fn quad_count(&self) -> u64 {
