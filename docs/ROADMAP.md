@@ -20,7 +20,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 2. **Windowed present-mode benchmark** (`vx bench --windowed`): the same orbit with a real swapchain, vsync off, recording frame pacing (p99, frame-time variance). The offscreen bench measures serialised per-frame cost and does not capture presentation or pipelining.
 3. **Extend GPU timestamps** to every pass as passes are added (cull, shadow, post). Keep one JSON metric per pass.
 4. ~~**Peak memory and VRAM reporting**~~ Done 2026-11-03: `results.process_peak_resident_mib` (Linux `VmHWM`, Windows `PeakWorkingSetSize`) and `gpu_memory` (wgpu allocator report by resource label) in every `vx bench` report.
-5. **Tracy behind a feature flag** via the `profiling` crate (zones in gen, mesh, upload, encode, submit, frame). Use it first on backlog B-02 (frame CPU encode grows with draw count). Verify: `bench-compare` shows no change with the feature off.
+5. ~~**Tracy behind a feature flag**~~ Done 2026-11-03: `--features tracy` via the `profiling` crate, zones listed in `docs/BENCHMARKING.md`. The Tracy-off no-change check is part of the S1 exit gate run on `noah-msi-rtx2060`.
 6. **CI regression signal**: instruction-count benches (gungraun or CodSpeed) for the mesher and generator, because wall-clock on shared runners is too noisy (measured 12–28% repeat spread on a cloud VM).
 
 ## Then: streaming core

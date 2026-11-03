@@ -24,6 +24,7 @@ fn columns_within(radius: i32) -> impl Iterator<Item = ChunkPos> {
 }
 
 pub fn build_region(view_radius: u32, terrain: TerrainSettings) -> MeshedRegion {
+    profiling::scope!("build_region");
     let radius = view_radius as i32;
     let generator = TerrainGenerator::new(terrain);
     let generate_started = Instant::now();
@@ -35,6 +36,7 @@ pub fn build_region(view_radius: u32, terrain: TerrainSettings) -> MeshedRegion 
         })
         .collect();
     let generate_time = generate_started.elapsed();
+    profiling::scope!("assemble_and_mesh_region");
 
     let mut window = ChunkWindow::for_view_radius(view_radius + 1, VERTICAL_CHUNKS.len() as u32);
     let generated_chunks = generated.len();

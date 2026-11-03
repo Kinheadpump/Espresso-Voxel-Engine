@@ -12,6 +12,7 @@ pub fn gather_padded(
     dense_scratch: &mut DenseChunk,
     out: &mut [BlockId; PADDED_VOLUME],
 ) -> Result<(), MissingNeighbour> {
+    profiling::scope!("gather_padded");
     let center_voxels = window.get(center).ok_or(MissingNeighbour(center))?;
     let mut neighbours = [center_voxels; 6];
     for (neighbour, dir) in neighbours.iter_mut().zip(FaceDir::ALL) {

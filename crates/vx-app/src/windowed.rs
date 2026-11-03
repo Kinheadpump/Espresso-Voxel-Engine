@@ -181,6 +181,7 @@ impl RenderState {
     }
 
     fn render(&mut self) {
+        profiling::scope!("frame");
         let now = Instant::now();
         let frame_time = now - self.last_frame;
         self.last_frame = now;
@@ -212,9 +213,13 @@ impl RenderState {
             let mut pass = begin_terrain_pass(&mut encoder, &view, &self.depth_view, None);
             self.terrain.draw(&mut pass);
         }
-        self.gpu.queue.submit([encoder.finish()]);
-        self.gpu.queue.present(frame);
+        {
+            profiling::scope!("queue_submit_present");
+            self.gpu.queue.submit([encoder.finish()]);
+            self.gpu.queue.present(frame);
+        }
         self.frame_stats.record(frame_time, &self.terrain);
+        profiling::finish_frame!();
     }
 }
 

@@ -46,6 +46,7 @@ impl Default for BinaryGreedyMesher {
 
 impl BinaryGreedyMesher {
     pub fn mesh(&mut self, voxels: &PaddedVoxels, mesh: &mut ChunkMesh) {
+        profiling::scope!("mesh_chunk");
         mesh.clear();
         self.build_opaque_columns(voxels);
         for dir in FaceDir::ALL {
