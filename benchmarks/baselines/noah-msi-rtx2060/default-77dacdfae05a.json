@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "unix_time": 1793711668,
+  "build": {
+    "git_commit": "77dacdfae05a",
+    "git_dirty": "false",
+    "profile": "release",
+    "debug_assertions": false,
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "rustflags": "none"
+  },
+  "system": {
+    "os": "Windows 11 Home",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "physical_cores": 6,
+    "logical_cores": 12,
+    "total_memory_mib": 16225
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 2060",
+    "backend": "Vulkan",
+    "device_type": "DiscreteGpu",
+    "driver": "NVIDIA",
+    "driver_info": "616.92",
+    "tier": "GpuDrivenWithCount",
+    "timestamps": true
+  },
+  "scenario": {
+    "name": "default",
+    "seed": 1337,
+    "view_radius": 16,
+    "vertical_chunks": 5,
+    "threads": 12,
+    "width": 1920,
+    "height": 1080,
+    "warmup_frames": 120,
+    "measured_frames": 600,
+    "repeats": 5,
+    "frame_sync": "offscreen, CPU waits for GPU completion every frame"
+  },
+  "content": {
+    "chunks_generated": 6125,
+    "chunks_meshed": 2826,
+    "quads": 986380,
+    "mesh_hash": "fab6872fe1853d8e",
+    "voxel_heap_bytes": 16843696,
+    "geometry_buffer_bytes": 8088128,
+    "draws": 9492
+  },
+  "results": {
+    "world_generation_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        255.63429999999997,
+        278.86240000000004,
+        270.8983,
+        267.3909,
+        264.3019
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 255.63429999999997,
+        "p50": 267.3909,
+        "p90": 275.67676,
+        "p99": 278.54383600000006,
+        "max": 278.86240000000004,
+        "mean": 267.41756,
+        "stddev": 7.637449545391468
+      }
+    },
+    "meshing_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        110.4792,
+        141.45569999999998,
+        109.84389999999999,
+        102.7075,
+        102.85719999999999
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 102.7075,
+        "p50": 109.84389999999999,
+        "p90": 129.0651,
+        "p99": 140.21663999999998,
+        "max": 141.45569999999998,
+        "mean": 113.46869999999998,
+        "stddev": 14.37884426496093
+      }
+    },
+    "upload_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        13.8736,
+        15.0638,
+        14.5272,
+        11.0708,
+        10.5473
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 10.5473,
+        "p50": 13.8736,
+        "p90": 14.849160000000001,
+        "p99": 15.042336,
+        "max": 15.0638,
+        "mean": 13.016539999999997,
+        "stddev": 1.8488358127210756
+      }
+    },
+    "frame_cpu_encode_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        447.15,
+        456.7,
+        483.0,
+        480.45000000000005,
+        483.45
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 334.0,
+        "p50": 473.8,
+        "p90": 638.4,
+        "p99": 1094.046999999999,
+        "max": 2420.0,
+        "mean": 498.99669999999924,
+        "stddev": 154.7272229627891
+      }
+    },
+    "frame_gpu_terrain_pass_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        518.144,
+        520.192,
+        520.192,
+        539.616,
+        519.392
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 497.664,
+        "p50": 521.328,
+        "p90": 552.3104,
+        "p99": 729.0880000000001,
+        "max": 737.28,
+        "mean": 528.9425173333332,
+        "stddev": 30.698235354262632
+      }
+    },
+    "frame_wall_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        1226.6499999999999,
+        1203.0,
+        1251.45,
+        1292.95,
+        1252.25
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 973.4,
+        "p50": 1244.35,
+        "p90": 2035.6299999999999,
+        "p99": 3088.079999999998,
+        "max": 3415.3999999999996,
+        "mean": 1391.5215666666652,
+        "stddev": 429.73373265105937
+      }
+    },
+    "process_resident_mib": 94.98046875
+  }
+}
