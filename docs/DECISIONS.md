@@ -53,3 +53,7 @@ One deterministic, offscreen scenario per scale (`small`, `default`, `far`), wit
 ## ADR-0013 Repository history (Accepted, 2026-11-03)
 
 The new repo starts from one bootstrap commit. Decaf and Lemon keep their history in their own repos, and `docs/HISTORY.md` and the audits cite their commits by hash. Fair comparisons against legacy code use copies pinned to named commits in `tools/legacy-compare`.
+
+## ADR-0014 Block textures: 16 px texture array with world-space UVs (Proposed, 2026-11-03)
+
+Concept in `docs/TEXTURES.md`. One `Rgba8UnormSrgb` 2D array (16 × 16, 5 mips, `Repeat`), layer looked up per vertex from a `block_faces` storage buffer, one sample per fragment, texel-snapped linear + anisotropic filtering, per-voxel rotation from an ALU hash. `PackedQuad` is unchanged. Alternatives: 32 px array (same pipeline, 4× texels), flat colour + ALU noise (no fetches). Atlas rejected: greedy quads need per-block repeat, which an atlas cannot do without breaking mips. Decide with: Noah's pick of art direction, then opaque-pass GPU ms flat vs textured on Noah's GPU (`default`, `far`), budget +10%.
