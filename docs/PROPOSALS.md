@@ -2,7 +2,7 @@
 
 Ideas from external engines, each with the expected benefit and the measurement that decides it. Nothing here is accepted. A proposal becomes work by getting a roadmap slot and, if it is a design choice, an ADR. Nothing here starts before the hardware baseline (roadmap item 1) exists.
 
-Sources and the comparison with our code: `docs/research/engine-survey-2026-11.md`. Number labels (same scheme as the benchmarking docs): **measured** (this repo, `docs/PERFORMANCE.md`), **quoted** (a source), **computed** (arithmetic), **estimate** (a guess to be replaced by a measurement).
+Sources and the comparison with our code: `docs/research/engine-survey-2026-11.md`. Number labels as in `docs/BENCHMARKING.md`: **measured** (this repo, `docs/PERFORMANCE.md`), **quoted** (a source), **computed** (arithmetic), **estimate** (a guess to be replaced by a measurement).
 
 Size: S = under a day, M = a few days, L = rewrites a subsystem.
 

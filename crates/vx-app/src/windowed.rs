@@ -32,7 +32,10 @@ pub fn run(options: Options) -> Result<()> {
     let (sender, receiver) = crossbeam_channel::bounded(1);
     let view_radius = options.view_radius;
     rayon::spawn(move || {
-        let _ = sender.send(region::build_region(view_radius));
+        let _ = sender.send(region::build_region(
+            view_radius,
+            vx_world::TerrainSettings::default(),
+        ));
     });
     let mut app = App {
         options,
@@ -201,7 +204,7 @@ impl RenderState {
                 label: Some("frame"),
             });
         {
-            let mut pass = begin_terrain_pass(&mut encoder, &view, &self.depth_view);
+            let mut pass = begin_terrain_pass(&mut encoder, &view, &self.depth_view, None);
             self.terrain.draw(&mut pass);
         }
         self.gpu.queue.submit([encoder.finish()]);
