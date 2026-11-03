@@ -176,19 +176,12 @@ impl PackedVoxels {
     }
 
     fn decode_into(&self, out: &mut DenseChunk) {
-        let bits = self.bits_per_voxel as usize;
-        let per_word = 64 / bits;
-        let mask = (1u64 << bits) - 1;
-        for (word, chunk) in self.words.iter().zip(out.chunks_exact_mut(per_word)) {
-            let mut word = *word;
-            for slot in chunk {
-                *slot = self.palette[(word & mask) as usize];
-                word >>= bits;
-            }
-        }
-        if !CHUNK_VOLUME.is_multiple_of(64) {
-            let decoded_by_full_words = CHUNK_VOLUME / per_word * per_word;
-            self.decode_tail(&mut out[decoded_by_full_words..]);
+        let per_word = 64 / self.bits_per_voxel as usize;
+        let full_words = CHUNK_VOLUME / per_word;
+        let (whole, tail) = out.split_at_mut(full_words * per_word);
+        self.decode_whole_words(&self.words[..full_words], whole);
+        if !CHUNK_VOLUME.is_multiple_of(64) && !tail.is_empty() {
+            self.decode_unaligned(full_words * 64, tail);
         }
     }
 
@@ -207,13 +200,23 @@ impl PackedVoxels {
 
     #[inline(always)]
     fn decode_whole_words(&self, words: &[u64], out: &mut [BlockId]) {
-        let bits = self.bits_per_voxel as usize;
-        let mask = (1u64 << bits) - 1;
-        for (word, chunk) in words.iter().zip(out.chunks_exact_mut(64 / bits)) {
+        match self.bits_per_voxel {
+            1 => self.decode_words_of::<1>(words, out),
+            2 => self.decode_words_of::<2>(words, out),
+            4 => self.decode_words_of::<4>(words, out),
+            8 => self.decode_words_of::<8>(words, out),
+            _ => self.decode_words_of::<16>(words, out),
+        }
+    }
+
+    #[inline(always)]
+    fn decode_words_of<const BITS: usize>(&self, words: &[u64], out: &mut [BlockId]) {
+        let mask = (1u64 << BITS) - 1;
+        for (word, chunk) in words.iter().zip(out.chunks_exact_mut(64 / BITS)) {
             let mut word = *word;
             for slot in chunk {
                 *slot = self.palette[(word & mask) as usize];
-                word >>= bits;
+                word >>= BITS;
             }
         }
     }
@@ -233,20 +236,6 @@ impl PackedVoxels {
             *slot = self.palette[(word & mask) as usize];
             word >>= bits;
             bits_left -= bits;
-        }
-    }
-
-    #[cold]
-    fn decode_tail(&self, tail: &mut [BlockId]) {
-        let Some(&last_word) = self.words.last() else {
-            return;
-        };
-        let bits = self.bits_per_voxel;
-        let mask = (1u64 << bits) - 1;
-        let mut word = last_word;
-        for slot in tail {
-            *slot = self.palette[(word & mask) as usize];
-            word >>= bits;
         }
     }
 }
