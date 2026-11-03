@@ -66,16 +66,10 @@ pub fn build_region(view_radius: u32, terrain: TerrainSettings) -> MeshedRegion 
         .collect::<Vec<_>>()
         .into_par_iter()
         .map_init(
-            || {
-                (
-                    BinaryGreedyMesher::default(),
-                    new_dense_chunk(),
-                    new_padded_voxels(),
-                )
-            },
-            |(mesher, dense, padded), pos| {
+            || (BinaryGreedyMesher::default(), new_padded_voxels()),
+            |(mesher, padded), pos| {
                 let mut mesh = ChunkMesh::default();
-                if gather_padded(&window, pos, dense, padded).is_ok() {
+                if gather_padded(&window, pos, padded).is_ok() {
                     mesher.mesh(padded, &mut mesh);
                 }
                 (pos, mesh)

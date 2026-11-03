@@ -35,8 +35,7 @@ pub fn surface_neighbourhood() -> ChunkWindow<ChunkVoxels> {
 pub fn padded_surface_chunk() -> Box<PaddedVoxels> {
     let window = surface_neighbourhood();
     let mut padded = new_padded_voxels();
-    gather_padded(&window, SURFACE_CHUNK, &mut new_dense_chunk(), &mut padded)
-        .expect("all 26 neighbours were generated");
+    gather_padded(&window, SURFACE_CHUNK, &mut padded).expect("all 26 neighbours were generated");
     padded
 }
 

@@ -60,6 +60,15 @@ impl ChunkVoxels {
         }
     }
 
+    /// Decodes `out.len()` consecutive voxels starting at `first_voxel` (a row along x).
+    #[inline]
+    pub fn decode_row(&self, first_voxel: usize, out: &mut [BlockId]) {
+        match self {
+            Self::Uniform(block) => out.fill(*block),
+            Self::Packed(packed) => packed.decode_row(first_voxel, out),
+        }
+    }
+
     pub fn uniform_block(&self) -> Option<BlockId> {
         match self {
             Self::Uniform(block) => Some(*block),
@@ -183,6 +192,50 @@ impl PackedVoxels {
         }
     }
 
+    #[inline]
+    fn decode_row(&self, first_voxel: usize, out: &mut [BlockId]) {
+        let bits = self.bits_per_voxel as usize;
+        let first_bit = first_voxel * bits;
+        let row_bits = out.len() * bits;
+        if first_bit.is_multiple_of(64) && row_bits.is_multiple_of(64) {
+            let words = &self.words[first_bit / 64..(first_bit + row_bits) / 64];
+            self.decode_whole_words(words, out);
+        } else {
+            self.decode_unaligned(first_bit, out);
+        }
+    }
+
+    #[inline(always)]
+    fn decode_whole_words(&self, words: &[u64], out: &mut [BlockId]) {
+        let bits = self.bits_per_voxel as usize;
+        let mask = (1u64 << bits) - 1;
+        for (word, chunk) in words.iter().zip(out.chunks_exact_mut(64 / bits)) {
+            let mut word = *word;
+            for slot in chunk {
+                *slot = self.palette[(word & mask) as usize];
+                word >>= bits;
+            }
+        }
+    }
+
+    fn decode_unaligned(&self, first_bit: usize, out: &mut [BlockId]) {
+        let bits = self.bits_per_voxel;
+        let mask = (1u64 << bits) - 1;
+        let mut word_index = first_bit / 64;
+        let mut word = self.words[word_index] >> (first_bit % 64);
+        let mut bits_left = 64 - (first_bit % 64) as u32;
+        for slot in out {
+            if bits_left == 0 {
+                word_index += 1;
+                word = self.words[word_index];
+                bits_left = 64;
+            }
+            *slot = self.palette[(word & mask) as usize];
+            word >>= bits;
+            bits_left -= bits;
+        }
+    }
+
     #[cold]
     fn decode_tail(&self, tail: &mut [BlockId]) {
         let Some(&last_word) = self.words.last() else {
@@ -211,6 +264,7 @@ fn palette_index_or_insert(palette: &mut Vec<BlockId>, block: BlockId) -> usize 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use vx_core::CHUNK_SIZE;
 
     fn xorshift(state: &mut u64) -> u64 {
         *state ^= *state << 13;
@@ -250,6 +304,29 @@ mod tests {
         assert_eq!(decoded, dense);
         for (voxel, &block) in dense.iter().enumerate() {
             assert_eq!(voxels.get(LocalPos::from_index(voxel)), block);
+        }
+    }
+
+    #[test]
+    fn decode_row_matches_get_at_every_width_and_offset() {
+        let mut rng = 0x2545_F491_4F6C_DD1D;
+        for palette_len in [2u64, 3, 5, 17, 300] {
+            let mut dense = new_dense_chunk();
+            for block in dense.iter_mut() {
+                *block = BlockId((xorshift(&mut rng) % palette_len) as u16);
+            }
+            let voxels = ChunkVoxels::from_dense(&dense);
+            let mut row = vec![BlockId::AIR; CHUNK_SIZE];
+            for first in [
+                0,
+                CHUNK_SIZE,
+                3,
+                CHUNK_VOLUME - CHUNK_SIZE,
+                CHUNK_VOLUME / 2 + 7,
+            ] {
+                voxels.decode_row(first, &mut row);
+                assert_eq!(row, dense[first..first + CHUNK_SIZE]);
+            }
         }
     }
 
