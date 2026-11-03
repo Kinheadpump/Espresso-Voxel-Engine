@@ -22,6 +22,12 @@ pub struct BenchReport {
     pub gpu_memory: Option<GpuMemoryReport>,
 }
 
+impl BenchReport {
+    pub fn is_windowed(&self) -> bool {
+        self.scenario.frame_sync.starts_with("windowed")
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct BuildInfo {
     pub git_commit: String,

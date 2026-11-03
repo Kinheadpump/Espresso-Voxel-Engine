@@ -5,6 +5,7 @@ mod report;
 mod scenario;
 mod stats;
 mod visibility;
+mod windowed;
 
 use std::{
     path::{Path, PathBuf},
@@ -34,6 +35,7 @@ pub struct BenchOptions {
     pub height: u32,
     pub shading: Shading,
     pub indirect_validation: IndirectValidation,
+    pub windowed: bool,
     pub out: Option<PathBuf>,
 }
 
@@ -49,6 +51,7 @@ impl BenchOptions {
             height: 1080,
             shading: Shading::Flat,
             indirect_validation: IndirectValidation::for_build(),
+            windowed: false,
             out: None,
         }
     }
@@ -58,92 +61,37 @@ fn millis(duration: Duration) -> f64 {
     duration.as_secs_f64() * 1e3
 }
 
+const OFFSCREEN_FRAME_SYNC: &str = "offscreen, CPU waits for GPU completion every frame";
+
+struct RenderedRun {
+    gpu: GpuInfo,
+    frame_sync: String,
+    width: u32,
+    height: u32,
+    content: ContentInfo,
+    upload_ms: Vec<f64>,
+    frames: frames::FrameMicros,
+    visibility: Option<visibility::VisibilityCounters>,
+}
+
+struct MeasuredWorld {
+    region: MeshedRegion,
+    generation_ms: Vec<f64>,
+    meshing_ms: Vec<f64>,
+    process_resident_mib: Option<f64>,
+}
+
 pub fn run(options: &BenchOptions) -> Result<()> {
     let build = BuildInfo::current();
     if build.debug_assertions {
         log::warn!("DEBUG BUILD: results are not comparable; use `cargo run --release -- bench`");
     }
-    let terrain_settings = options.scenario.terrain_settings();
-    let gpu = pollster::block_on(GpuContext::new(
-        GpuContext::create_instance_with(options.indirect_validation),
-        None,
-    ))?;
-    let gpu_info = GpuInfo::of(&gpu);
-    if gpu_info.is_software() {
-        log::warn!(
-            "software adapter ({}): GPU timings are not representative of real hardware",
-            gpu_info.name
-        );
-    }
-    let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(options.threads as usize)
-        .build()?;
-
-    log::info!(
-        "world: 1 warmup + {} repeats of generate + mesh at radius {}",
-        options.repeats,
-        options.scenario.view_radius()
-    );
-    let (region, generation_ms, meshing_ms) = measure_region(options, terrain_settings, &pool)?;
-    let process_resident_mib = report::process_resident_mib();
-
-    let mut terrain = TerrainRenderer::new(
-        &gpu.device,
-        &gpu.queue,
-        vx_render::OffscreenTarget::FORMAT,
-        options.shading,
-    )?;
-    let upload_ms = measure_upload(options, &gpu, &mut terrain, &region);
-
-    log::info!(
-        "frames: {} repeats of {} warmup + {} measured at {}x{}",
-        options.repeats,
-        options.warmup_frames,
-        options.measured_frames,
-        options.width,
-        options.height
-    );
-    let (frames, visibility) = measure_path(options, &gpu, &terrain, &region);
-
-    let report = BenchReport {
-        schema: report::SCHEMA_VERSION,
-        unix_time: SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .map_or(0, |d| d.as_secs()),
-        build,
-        system: SystemInfo::current(),
-        gpu: gpu_info,
-        scenario: ScenarioInfo {
-            name: options.scenario.name().into(),
-            seed: terrain_settings.seed,
-            view_radius: options.scenario.view_radius(),
-            vertical_chunks: VERTICAL_CHUNKS.len() as u32,
-            threads: options.threads,
-            width: options.width,
-            height: options.height,
-            warmup_frames: options.warmup_frames,
-            measured_frames: options.measured_frames,
-            repeats: options.repeats,
-            frame_sync: "offscreen, CPU waits for GPU completion every frame".into(),
-        },
-        content: content_info(options, &region, &terrain),
-        results: Results {
-            world_generation_ms: Metric::from_single_samples("ms", &generation_ms),
-            meshing_ms: Metric::from_single_samples("ms", &meshing_ms),
-            upload_ms: Metric::from_single_samples("ms", &upload_ms),
-            frame_cpu_encode_us: Metric::from_repeats("us", &frames.cpu_encode),
-            frame_cpu_record_us: Some(Metric::from_repeats("us", &frames.cpu_record)),
-            frame_cpu_submit_us: Some(Metric::from_repeats("us", &frames.cpu_submit)),
-            frame_gpu_terrain_pass_us: frames
-                .gpu_pass
-                .map(|repeats| Metric::from_repeats("us", &repeats)),
-            frame_wall_us: Metric::from_repeats("us", &frames.wall),
-            process_resident_mib,
-            process_peak_resident_mib: memory::peak_resident_mib(),
-        },
-        gpu_memory: frames.gpu_memory.clone(),
-        visibility: Some(visibility),
+    let (world, rendered) = if options.windowed {
+        windowed::run(options)?
+    } else {
+        run_offscreen(options)?
     };
+    let report = assemble_report(options, build, &world, rendered);
     let path = options
         .out
         .clone()
@@ -152,6 +100,122 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     compare::print_report(&report);
     println!("\nwrote {}", path.display());
     Ok(())
+}
+
+fn warn_if_software(gpu_info: &GpuInfo) {
+    if gpu_info.is_software() {
+        log::warn!(
+            "software adapter ({}): GPU timings are not representative of real hardware",
+            gpu_info.name
+        );
+    }
+}
+
+fn measure_world(options: &BenchOptions) -> Result<MeasuredWorld> {
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(options.threads as usize)
+        .build()?;
+    log::info!(
+        "world: 1 warmup + {} repeats of generate + mesh at radius {}",
+        options.repeats,
+        options.scenario.view_radius()
+    );
+    let (region, generation_ms, meshing_ms) =
+        measure_region(options, options.scenario.terrain_settings(), &pool)?;
+    Ok(MeasuredWorld {
+        region,
+        generation_ms,
+        meshing_ms,
+        process_resident_mib: report::process_resident_mib(),
+    })
+}
+
+fn run_offscreen(options: &BenchOptions) -> Result<(MeasuredWorld, RenderedRun)> {
+    let gpu = pollster::block_on(GpuContext::new(
+        GpuContext::create_instance_with(options.indirect_validation),
+        None,
+    ))?;
+    let gpu_info = GpuInfo::of(&gpu);
+    warn_if_software(&gpu_info);
+    let world = measure_world(options)?;
+    let mut terrain = TerrainRenderer::new(
+        &gpu.device,
+        &gpu.queue,
+        vx_render::OffscreenTarget::FORMAT,
+        options.shading,
+    )?;
+    let upload_ms = measure_upload(options, &gpu, &mut terrain, &world.region);
+    log_frame_plan(options, options.width, options.height);
+    let (frames, visibility) = measure_path(options, &gpu, &terrain, &world.region);
+    let rendered = RenderedRun {
+        gpu: gpu_info,
+        frame_sync: OFFSCREEN_FRAME_SYNC.into(),
+        width: options.width,
+        height: options.height,
+        content: content_info(options, &world.region, &terrain),
+        upload_ms,
+        frames,
+        visibility: Some(visibility),
+    };
+    Ok((world, rendered))
+}
+
+fn log_frame_plan(options: &BenchOptions, width: u32, height: u32) {
+    log::info!(
+        "frames: {} repeats of {} warmup + {} measured at {width}x{height}",
+        options.repeats,
+        options.warmup_frames,
+        options.measured_frames,
+    );
+}
+
+fn assemble_report(
+    options: &BenchOptions,
+    build: BuildInfo,
+    world: &MeasuredWorld,
+    rendered: RenderedRun,
+) -> BenchReport {
+    let terrain_settings = options.scenario.terrain_settings();
+    let frames = rendered.frames;
+    BenchReport {
+        schema: report::SCHEMA_VERSION,
+        unix_time: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs()),
+        build,
+        system: SystemInfo::current(),
+        gpu: rendered.gpu,
+        scenario: ScenarioInfo {
+            name: options.scenario.name().into(),
+            seed: terrain_settings.seed,
+            view_radius: options.scenario.view_radius(),
+            vertical_chunks: VERTICAL_CHUNKS.len() as u32,
+            threads: options.threads,
+            width: rendered.width,
+            height: rendered.height,
+            warmup_frames: options.warmup_frames,
+            measured_frames: options.measured_frames,
+            repeats: options.repeats,
+            frame_sync: rendered.frame_sync,
+        },
+        content: rendered.content,
+        results: Results {
+            world_generation_ms: Metric::from_single_samples("ms", &world.generation_ms),
+            meshing_ms: Metric::from_single_samples("ms", &world.meshing_ms),
+            upload_ms: Metric::from_single_samples("ms", &rendered.upload_ms),
+            frame_cpu_encode_us: Metric::from_repeats("us", &frames.cpu_encode),
+            frame_cpu_record_us: Some(Metric::from_repeats("us", &frames.cpu_record)),
+            frame_cpu_submit_us: Some(Metric::from_repeats("us", &frames.cpu_submit)),
+            frame_gpu_terrain_pass_us: frames
+                .gpu_pass
+                .map(|repeats| Metric::from_repeats("us", &repeats)),
+            frame_wall_us: Metric::from_repeats("us", &frames.wall),
+            process_resident_mib: world.process_resident_mib,
+            process_peak_resident_mib: memory::peak_resident_mib(),
+        },
+        gpu_memory: frames.gpu_memory,
+        visibility: rendered.visibility,
+    }
 }
 
 fn content_info(
@@ -189,7 +253,8 @@ fn measure_path(
     region: &MeshedRegion,
 ) -> (frames::FrameMicros, visibility::VisibilityCounters) {
     let generator = TerrainGenerator::new(options.scenario.terrain_settings());
-    let cameras = frames::path_cameras(options, &generator);
+    let aspect = options.width as f32 / options.height as f32;
+    let cameras = frames::path_cameras(options, &generator, aspect);
     let frames = frames::measure(options, gpu, terrain, &cameras);
     log::info!("visibility: culling ladder over {VISIBILITY_SAMPLES} path frames");
     let visibility = visibility::measure(

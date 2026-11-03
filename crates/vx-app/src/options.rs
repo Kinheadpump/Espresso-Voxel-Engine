@@ -40,7 +40,7 @@ const USAGE: &str = "usage:
      [--scenario <name> [--at 0..1]] [--indirect-validation on|off]
   vx bench [--scenario small|default|far|cave|mountain|fly-fast] [--repeats N] [--frames N] [--warmup N]
            [--threads N] [--resolution WxH] [--shading flat|textured]
-           [--indirect-validation on|off] [--out <file.json>]
+           [--indirect-validation on|off] [--windowed] [--out <file.json>]
   vx bench-compare <baseline.json> <candidate.json> [--allow-shading-change]";
 
 fn next_value<T: std::str::FromStr>(
@@ -171,6 +171,7 @@ fn parse_bench(mut args: impl Iterator<Item = String>) -> Result<BenchOptions> {
             "--indirect-validation" => {
                 bench.indirect_validation = parse_indirect_validation(&mut args, &arg)?;
             }
+            "--windowed" => bench.windowed = true,
             "--out" => bench.out = Some(next_value::<String>(&mut args, &arg)?.into()),
             _ => bail!("unknown bench argument {arg:?}\n{USAGE}"),
         }
