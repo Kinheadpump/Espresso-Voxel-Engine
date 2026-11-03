@@ -5,7 +5,10 @@ use vx_render::{
 };
 use vx_world::TerrainGenerator;
 
-use super::BenchOptions;
+use super::{
+    BenchOptions,
+    memory::{self, GpuMemoryReport},
+};
 
 pub struct FrameMicros {
     pub cpu_encode: Vec<Vec<f64>>,
@@ -13,6 +16,7 @@ pub struct FrameMicros {
     pub cpu_submit: Vec<Vec<f64>>,
     pub gpu_pass: Option<Vec<Vec<f64>>>,
     pub wall: Vec<Vec<f64>>,
+    pub gpu_memory: Option<GpuMemoryReport>,
 }
 
 /// Camera for every frame of one repeat: `warmup` frames then `measured` frames, both walking the
@@ -48,6 +52,7 @@ pub fn measure(
         cpu_submit: Vec::new(),
         gpu_pass: timer.as_ref().map(|_| Vec::new()),
         wall: Vec::new(),
+        gpu_memory: None,
     };
     for _ in 0..options.repeats {
         let mut cpu_encode = Vec::with_capacity(options.measured_frames as usize);
@@ -111,5 +116,6 @@ pub fn measure(
             }
         }
     }
+    samples.gpu_memory = memory::gpu_memory(&gpu.device);
     samples
 }

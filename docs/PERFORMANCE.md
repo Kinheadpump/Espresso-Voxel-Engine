@@ -79,6 +79,36 @@ Content is identical between flat and textured (same `mesh_hash` per scenario). 
 - Textured shading costs about 40–45 µs per frame at radius 16 and about 47 µs at radius 32 (computed from the table). The cost barely grows with 3.8× the quads, which points to a per-pixel cost at a fixed resolution rather than the per-vertex face lookup (inferred, not profiled).
 - `default` uses most of the 10% budget. The levers, if a later change needs the headroom: anisotropy 4 instead of 8, and dropping the texel snap (it costs ALU, not fetches). Both are quick A/B runs with `--shading textured` on both sides.
 
+## Sprint S1 start baseline: `noah-msi-rtx2060` (2026-11-03)
+
+The reference every S1 gate compares against (`docs/SPRINTS.md` rule 1).
+
+- **Build:** commit `7cf5ed4fd962` (main after PR #12), release, clean tree, flat shading, wgpu indirect validation off (ADR-0015).
+- **Machine:** as in the hardware baseline (driver 616.92, AC power, High performance plan). Nothing else running.
+- **Command:** `scripts/bench-baseline.ps1 -Label noah-msi-rtx2060/sprint-S1-start`, then a second `default` run.
+- **Raw files:** `benchmarks/baselines/noah-msi-rtx2060/sprint-S1-start/`.
+
+### Timings (measured; median of 5 repeat medians, repeat spread in brackets)
+
+| Scenario | World generation | Meshing | Upload | Frame CPU encode (record / submit) | Frame GPU terrain pass | Frame wall |
+|---|---|---|---|---|---|---|
+| `small` | 52.1 ms (12%) | 18.6 ms (8%) | 2.8 ms (12%) | 65.4 µs (26.1 / 32.8) | 167.2 µs (85%) | 332.1 µs (54%) |
+| `default` | 165.3 ms (4%) | 64.4 ms (8%) | 7.3 ms (13%) | 143.4 µs (61.8 / 64.8) | 509.7 µs (7%) | 943.2 µs (17%) |
+| `far` | 618.9 ms (5%) | 253.8 ms (8%) | 46.1 ms (4%) | 162.3 µs (74.1 / 67.9) | 1,771.5 µs (1%) | 2,208.3 µs (3%) |
+| `cave` | 166.9 ms (9%) | 65.0 ms (13%) | 7.3 ms (6%) | 145.1 µs (62.0 / 66.3) | 460.4 µs (3%) | 886.1 µs (10%) |
+| `mountain` | 169.1 ms (2%) | 66.4 ms (1%) | 7.4 ms (8%) | 144.2 µs (61.6 / 65.2) | 479.2 µs (2%) | 911.8 µs (10%) |
+| `fly-fast` | 171.5 ms (3%) | 67.8 ms (2%) | 7.3 ms (14%) | 144.8 µs (62.2 / 65.5) | 496.1 µs (5%) | 919.7 µs (8%) |
+
+Content hashes match earlier runs (`default` `fab6872fe1853d8e`, `cave` `c105e9031c73c4ce`), and the culling ladders are identical to the B-01 section below.
+
+Stability (`vx bench-compare`, `default` run 1 → run 2): every metric within noise; largest change meshing +2.7% (noise 8.3%). Frame CPU encode spread reached 40% in run 2, so CPU-encode changes below ~40% cannot be called against this pair.
+
+Findings:
+
+- World generation and meshing are 35–40% faster than in the first hardware baseline (`default` 165 vs 260–267 ms) with no generator or mesher change between them; the laptop's CPU state differed between sessions. Compare only within one session, as `docs/BENCHMARKING.md` requires.
+- Frame CPU encode has a rare spike: pooled max 1.48–1.73 ms against p99 0.14–0.33 ms in every scenario (measured). The max sits in `submit` (1.39–1.65 ms), not in `record`. The windowed bench (roadmap 2) should show whether such spikes reach presentation.
+- `small` frame numbers are too noisy on this laptop for verdicts (54–85% spread).
+
 ## Occlusion scenarios and culling ladder: `noah-msi-rtx2060` (2026-11-03)
 
 - **Build:** PR #9 at `b2ee6a175ccc` (candidate) and `229487f9d90f` (base), release, rustc 1.97.1, built in a clean worktree; every report has `git_dirty=false`.

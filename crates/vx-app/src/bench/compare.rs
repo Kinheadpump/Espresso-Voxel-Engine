@@ -89,8 +89,28 @@ pub fn print_report(report: &BenchReport) {
             None => println!("{name:<30} {:>10}", "n/a"),
         }
     }
+    print_memory(report);
     if let Some(visibility) = &report.visibility {
         print_culling_ladder(visibility);
+    }
+}
+
+fn print_memory(report: &BenchReport) {
+    let peak = report
+        .results
+        .process_peak_resident_mib
+        .map_or("n/a".into(), |mib| format!("{mib:.0} MiB"));
+    match &report.gpu_memory {
+        Some(gpu) => {
+            println!(
+                "\nmemory: peak RSS {peak} | GPU allocated {:.1} MiB, reserved {:.1} MiB",
+                gpu.allocated_mib, gpu.reserved_mib
+            );
+            for (label, mib) in &gpu.allocated_mib_by_label {
+                println!("  {label:<28} {mib:>8.2} MiB");
+            }
+        }
+        None => println!("\nmemory: peak RSS {peak} | GPU allocator report n/a on this backend"),
     }
 }
 

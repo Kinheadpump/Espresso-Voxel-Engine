@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sysinfo::{ProcessesToUpdate, System};
 use vx_render::GpuContext;
 
-use super::{stats::Metric, visibility::VisibilityCounters};
+use super::{memory::GpuMemoryReport, stats::Metric, visibility::VisibilityCounters};
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -18,6 +18,8 @@ pub struct BenchReport {
     pub results: Results,
     #[serde(default)]
     pub visibility: Option<VisibilityCounters>,
+    #[serde(default)]
+    pub gpu_memory: Option<GpuMemoryReport>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -120,6 +122,8 @@ pub struct Results {
     pub frame_gpu_terrain_pass_us: Option<Metric>,
     pub frame_wall_us: Metric,
     pub process_resident_mib: Option<f64>,
+    #[serde(default)]
+    pub process_peak_resident_mib: Option<f64>,
 }
 
 impl BuildInfo {
