@@ -309,6 +309,21 @@ Base `6b20c4e` (`main`, S2 start) against candidate `62aa6a6` (B-03 padded decod
 
 Gate reading: world generation at `default` is at most half the S2 start (−51.8% and −56.0%, both runs) and `mesh_hash` is unchanged, so that gate passes. Meshing at `far` is faster on two agreeing runs (`far` and `default` run 2; `default` run 1 is inside its noise band). Frame metrics are unaffected, as expected for CPU-side work. Meshing at `default` is 52.3–54.9 ms, under the 80 ms long-term target (measured). SIMD noise (scope 4) is not in this run.
 
+## Sprint S3 start baseline: `noah-msi-rtx2060` (2026-11-03)
+
+`c830ca7` (`main` after PR #17), clean release build, flat shading, offscreen 1920×1080 unless stated, Vulkan 616.92. Data in `benchmarks/baselines/noah-msi-rtx2060/sprint-S3-start/`. Every S3 gate compares against these runs (`docs/SPRINTS.md` rule 1).
+
+| Scenario | Content (generated / meshed chunks, quads, draws, hash) | Frame wall | GPU terrain pass | World generation | Meshing |
+|---|---|---|---|---|---|
+| `small` | 1,805 / 748, 259,091, 2,506, `65d196ce12d01116` | 381.2 µs (spread 69%) | 173.1 µs (spread 39%) | 20.2 ms | 14.1 ms |
+| `default` | 6,125 / 2,826, 986,380, 9,492, `fab6872fe1853d8e` | 935.0 µs | 507.8 µs | 66.7 ms | 50.3 ms |
+| `far` | 22,445 / 10,858, 3,792,695, 36,275, `4229b10348a4dc42` | 2,186.6 µs | 1,750.3 µs | 249.3 ms | 192.7 ms |
+| `cave` | 6,125 / 2,826, 986,480, 9,559, `c105e9031c73c4ce` | 879.4 µs | 457.0 µs | 68.7 ms | 50.7 ms |
+| `mountain` | same content as `default` | 887.4 µs | 476.4 µs | 69.0 ms | 51.3 ms |
+| `fly-fast` | same content as `default` | 709.8 µs | 491.7 µs | 75.3 ms | 55.0 ms |
+
+All values measured (median of repeat medians). `small` frame numbers are too noisy to gate on. Windowed `default` (borderless 3440×1440, present mode Immediate): frame interval p50 896.3 µs, p99 1,486.5 µs, max 51,813.4 µs, repeat spread 3.2%, p99/p50 1.66; CPU encode p50 358.1 µs (measured).
+
 ## Cloud VM reference (2026-11-03)
 
 - **Machine:** Intel Xeon @ 2.30 GHz VM, 4 vCPUs, 16 GiB, Ubuntu 24.04, rustc 1.97.1, no RUSTFLAGS.
