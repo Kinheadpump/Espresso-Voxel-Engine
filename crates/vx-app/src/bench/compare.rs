@@ -156,7 +156,11 @@ fn verdict(baseline: &Metric, candidate: &Metric) -> (f64, f64, &'static str) {
     (change, noise, label)
 }
 
-pub fn compare(baseline_path: &Path, candidate_path: &Path) -> Result<()> {
+pub fn compare(
+    baseline_path: &Path,
+    candidate_path: &Path,
+    allow_shading_change: bool,
+) -> Result<()> {
     let baseline = load(baseline_path)?;
     let candidate = load(candidate_path)?;
     if baseline.schema != SCHEMA_VERSION || candidate.schema != SCHEMA_VERSION {
@@ -168,6 +172,13 @@ pub fn compare(baseline_path: &Path, candidate_path: &Path) -> Result<()> {
     }
     if baseline.build.debug_assertions || candidate.build.debug_assertions {
         bail!("refusing to compare debug builds");
+    }
+    if !allow_shading_change && !baseline.content.same_surface(&candidate.content) {
+        bail!(
+            "shading differs ({} -> {}); pass --allow-shading-change if the surface is the variable under test",
+            baseline.content.shading,
+            candidate.content.shading
+        );
     }
     if baseline.scenario != candidate.scenario {
         bail!(
