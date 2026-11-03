@@ -21,8 +21,11 @@ pub struct FrameMicros {
 
 /// Camera for every frame of one repeat: `warmup` frames then `measured` frames, both walking the
 /// scenario path from its start so warm-up touches the same data as the measured frames.
-pub fn path_cameras(options: &BenchOptions, terrain: &TerrainGenerator) -> Vec<CameraUniform> {
-    let aspect = options.width as f32 / options.height as f32;
+pub fn path_cameras(
+    options: &BenchOptions,
+    terrain: &TerrainGenerator,
+    aspect: f32,
+) -> Vec<CameraUniform> {
     let warmup = (0..options.warmup_frames).map(|frame| frame as f32);
     let measured = (0..options.measured_frames).map(|frame| frame as f32);
     warmup

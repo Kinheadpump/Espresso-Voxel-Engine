@@ -18,6 +18,20 @@ How to measure the engine so that two runs can be compared fairly. Read this bef
 
 The camera follows a fixed path per scenario, so every run renders exactly the same frames. The CPU waits for the GPU every frame. That serialises the work: the numbers are per-frame costs (latency), not pipelined throughput, and there is no vsync or compositor in the loop.
 
+### Windowed mode (`--windowed`)
+
+`vx bench --windowed` renders the same scenario path to a real swapchain in a borderless fullscreen window, with no CPU wait for the GPU, so the driver, presentation and frame pipelining are in the loop. It picks `Immediate`, then `Mailbox`, then falls back to `Fifo` with a warning (vsync-bound, pacing meaningless). The resolution is the monitor's, recorded in `scenario.width/height`; the present mode and frame latency are recorded in `scenario.frame_sync`.
+
+| Metric | Windowed meaning |
+|---|---|
+| `frame_wall_us` | present-to-present interval, printed as `frame interval (present)` |
+| `frame_cpu_encode_us` | camera upload through `present` returning (swapchain acquire is outside it) |
+| `frame_cpu_submit_us` | `queue.submit` + `present` |
+| `frame_gpu_terrain_pass_us` | n/a (reading timestamps back would reintroduce the per-frame wait) |
+| `visibility` | n/a (the offscreen run reports it) |
+
+The report also prints a pacing line: p50, p99, max, standard deviation and p99/p50 of the interval. `bench-compare` refuses to compare a windowed run with an offscreen one because `frame_sync` differs. Keep the window in focus and the machine idle: the compositor and other windows are part of what this mode measures.
+
 ### Scenarios
 
 | Name | View radius (chunks) | Region | Camera path | Purpose |

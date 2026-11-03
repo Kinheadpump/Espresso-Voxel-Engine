@@ -30,7 +30,14 @@ fn timing_metrics(report: &BenchReport) -> Vec<(&'static str, Option<&Metric>)> 
             "frame GPU terrain pass",
             results.frame_gpu_terrain_pass_us.as_ref(),
         ),
-        ("frame wall (CPU+GPU, synced)", Some(&results.frame_wall_us)),
+        (
+            if report.is_windowed() {
+                "frame interval (present)"
+            } else {
+                "frame wall (CPU+GPU, synced)"
+            },
+            Some(&results.frame_wall_us),
+        ),
     ]
 }
 
@@ -89,10 +96,25 @@ pub fn print_report(report: &BenchReport) {
             None => println!("{name:<30} {:>10}", "n/a"),
         }
     }
+    if report.is_windowed() {
+        print_pacing(&report.results.frame_wall_us);
+    }
     print_memory(report);
     if let Some(visibility) = &report.visibility {
         print_culling_ladder(visibility);
     }
+}
+
+fn print_pacing(interval: &Metric) {
+    let pooled = &interval.pooled;
+    println!(
+        "\nframe pacing: p50 {:.1} us, p99 {:.1} us, max {:.1} us, stddev {:.1} us, p99/p50 {:.2}",
+        pooled.p50,
+        pooled.p99,
+        pooled.max,
+        pooled.stddev,
+        pooled.p99 / pooled.p50.max(f64::EPSILON)
+    );
 }
 
 fn print_memory(report: &BenchReport) {
