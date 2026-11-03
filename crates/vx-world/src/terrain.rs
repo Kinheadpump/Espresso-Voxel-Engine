@@ -80,6 +80,7 @@ impl TerrainGenerator {
     }
 
     pub fn generate(&self, pos: ChunkPos, dense_scratch: &mut DenseChunk) -> ChunkVoxels {
+        profiling::scope!("generate_chunk");
         let mut heights = [0i32; CHUNK_AREA];
         self.surface_heights(pos, &mut heights);
         let chunk_bottom = pos.min_block().y;

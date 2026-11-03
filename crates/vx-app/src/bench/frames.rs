@@ -61,6 +61,7 @@ pub fn measure(
         let mut gpu_pass = Vec::with_capacity(options.measured_frames as usize);
         let mut wall = Vec::with_capacity(options.measured_frames as usize);
         for (frame, camera) in (0u32..).zip(cameras) {
+            profiling::scope!("bench_frame");
             let measured_index = frame.checked_sub(options.warmup_frames);
             let started = Instant::now();
             terrain.update_camera(&gpu.queue, camera);
@@ -84,7 +85,10 @@ pub fn measure(
             }
             let command_buffer = encoder.finish();
             let submit_started = Instant::now();
-            gpu.queue.submit([command_buffer]);
+            {
+                profiling::scope!("queue_submit");
+                gpu.queue.submit([command_buffer]);
+            }
             let submitted = Instant::now();
             let encoded = submitted - started;
             let gpu_time = if let Some(timer) = &timer {
@@ -103,6 +107,7 @@ pub fn measure(
                     gpu_pass.push(gpu_time.as_secs_f64() * 1e6);
                 }
             }
+            profiling::finish_frame!();
         }
         samples.cpu_encode.push(cpu_encode);
         samples.cpu_record.push(cpu_record);

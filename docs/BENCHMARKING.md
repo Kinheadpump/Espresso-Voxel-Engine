@@ -109,6 +109,22 @@ Run both on the same machine and session, back to back, with the same settings. 
 
 `cargo bench-cpu` runs divan benches for the mesher, gather, generation and palette decode on a single thread. Use them to iterate on one function. `tools/legacy-compare` is the fair mesher comparison against Decaf and Lemon on identical input (see `docs/research/fair-mesher-comparison.md`).
 
+## Tracy zones
+
+`cargo run --profile profiling --features tracy -- bench` (or `-- run`) streams `profiling` zones to a Tracy viewer. The viewer must match `tracy-client` 0.18.5 / `tracy-client-sys` 0.29.0 (see the version table in the `tracy-client` README). Without the feature the `profiling` macros expand to nothing, so normal `vx bench` numbers carry no Tracy cost.
+
+| Zone | Where | Thread |
+|---|---|---|
+| `build_region`, `assemble_and_mesh_region` | `region::build_region` | caller |
+| `generate_chunk` | `TerrainGenerator::generate` | rayon worker |
+| `gather_padded`, `mesh_chunk` | neighbour gather and `BinaryGreedyMesher::mesh` | rayon worker |
+| `upload_static` | `TerrainRenderer::upload_static` | main |
+| `record_terrain_draws` | `terrain::record_draws` (encode) | main |
+| `queue_submit` / `queue_submit_present` | bench frame / windowed frame | main |
+| `bench_frame` / `frame` + frame mark | one per frame in `vx bench` / `vx run` | main |
+
+Never put Tracy-on numbers into a baseline or Stats section: the zones cost real time per call.
+
 ## Reporting rules
 
 Labels (**measured**, **quoted**, **computed**, **estimate**, **target**) and how to write them: `docs/DOC-GUIDELINES.md` §4. The two rules specific to benchmarks:

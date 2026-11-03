@@ -127,6 +127,7 @@ impl TerrainRenderer {
         device: &wgpu::Device,
         chunks: impl IntoIterator<Item = ChunkMeshRef<'a>>,
     ) {
+        profiling::scope!("upload_static");
         let mut quads: Vec<PackedQuad> = Vec::new();
         let mut origins: Vec<[i32; 4]> = Vec::new();
         let mut draws: Vec<DrawIndirectArgs> = Vec::new();
@@ -227,6 +228,7 @@ impl TerrainRenderer {
     }
 
     pub(crate) fn record_draws(&self, pass: &mut wgpu::RenderPass<'_>) {
+        profiling::scope!("record_terrain_draws");
         let Some(geometry) = &self.geometry else {
             return;
         };
