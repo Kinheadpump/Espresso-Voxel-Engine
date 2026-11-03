@@ -95,7 +95,12 @@ impl TerrainRenderer {
             bytemuck::cast_slice(&vx_core::block_face_table()),
         );
         Ok(Self {
-            pipeline: create_pipeline(device, &bind_group_layout, color_format, shading),
+            pipeline: create_terrain_pipeline(
+                device,
+                &bind_group_layout,
+                color_format,
+                TerrainShaderEntry::Shaded(shading),
+            ),
             bind_group_layout,
             camera_buffer,
             block_faces,
@@ -211,12 +216,22 @@ impl TerrainRenderer {
     }
 
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>) {
+        if self.geometry.is_some() {
+            pass.set_pipeline(&self.pipeline);
+            self.record_draws(pass);
+        }
+    }
+
+    pub(crate) fn record_draws(&self, pass: &mut wgpu::RenderPass<'_>) {
         let Some(geometry) = &self.geometry else {
             return;
         };
-        pass.set_pipeline(&self.pipeline);
         pass.set_bind_group(0, &geometry.bind_group, &[]);
         pass.multi_draw_indirect(&geometry.indirect, 0, geometry.draw_count);
+    }
+
+    pub(crate) fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.bind_group_layout
     }
 }
 
@@ -280,13 +295,32 @@ fn sampler_layout_entry(binding: u32) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-fn create_pipeline(
+#[derive(Clone, Copy)]
+pub(crate) enum TerrainShaderEntry {
+    Shaded(Shading),
+    ChunkId,
+}
+
+impl TerrainShaderEntry {
+    fn names(self) -> (&'static str, &'static str) {
+        match self {
+            Self::Shaded(_) => ("vs_main", "fs_main"),
+            Self::ChunkId => ("vs_chunk_id", "fs_chunk_id"),
+        }
+    }
+}
+
+pub(crate) fn create_terrain_pipeline(
     device: &wgpu::Device,
     bind_group_layout: &wgpu::BindGroupLayout,
     color_format: wgpu::TextureFormat,
-    shading: Shading,
+    entry: TerrainShaderEntry,
 ) -> wgpu::RenderPipeline {
-    let textured = f64::from(u8::from(shading == Shading::Textured));
+    let (vertex_entry, fragment_entry) = entry.names();
+    let textured = f64::from(u8::from(matches!(
+        entry,
+        TerrainShaderEntry::Shaded(Shading::Textured)
+    )));
     let constants = [("TEXTURED", textured)];
     let compilation_options = wgpu::PipelineCompilationOptions {
         constants: &constants,
@@ -306,7 +340,7 @@ fn create_pipeline(
         layout: Some(&layout),
         vertex: wgpu::VertexState {
             module: &shader,
-            entry_point: Some("vs_main"),
+            entry_point: Some(vertex_entry),
             compilation_options: compilation_options.clone(),
             buffers: &[],
         },
@@ -326,7 +360,7 @@ fn create_pipeline(
         multisample: wgpu::MultisampleState::default(),
         fragment: Some(wgpu::FragmentState {
             module: &shader,
-            entry_point: Some("fs_main"),
+            entry_point: Some(fragment_entry),
             compilation_options,
             targets: &[Some(wgpu::ColorTargetState {
                 format: color_format,

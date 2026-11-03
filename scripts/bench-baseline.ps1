@@ -14,7 +14,7 @@ cargo build --release -p vx-app
 if ($LASTEXITCODE -ne 0) { throw "build failed" }
 & .\target\release\vx.exe --probe | Tee-Object -FilePath "$out/adapter.txt"
 $commit = git rev-parse --short=12 HEAD
-foreach ($scenario in @("small", "default", "far")) {
+foreach ($scenario in @("small", "default", "far", "cave", "mountain", "fly-fast")) {
     & .\target\release\vx.exe bench --scenario $scenario --out "$out/$scenario-$commit.json" @Extra
     if ($LASTEXITCODE -ne 0) { throw "bench $scenario failed" }
 }

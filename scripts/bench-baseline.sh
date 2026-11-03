@@ -11,7 +11,7 @@ out="benchmarks/baselines/${label}"
 mkdir -p "$out"
 cargo build --release -p vx-app
 ./target/release/vx --probe | tee "$out/adapter.txt"
-for scenario in small default far; do
+for scenario in small default far cave mountain fly-fast; do
     ./target/release/vx bench --scenario "$scenario" --out "$out/${scenario}-$(git rev-parse --short=12 HEAD).json" "$@"
 done
 echo "results in $out"

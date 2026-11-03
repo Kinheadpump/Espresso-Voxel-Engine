@@ -15,15 +15,20 @@ How to measure the engine so that two runs can be compared fairly. Read this bef
 | Frame GPU terrain pass | GPU timestamp at the start and end of the terrain pass | same (only if the adapter supports timestamp queries) |
 | Frame wall | Encode + submit + wait for GPU completion | same |
 
-The camera flies a fixed orbit, so every run renders exactly the same frames. The CPU waits for the GPU every frame. That serialises the work: the numbers are per-frame costs (latency), not pipelined throughput, and there is no vsync or compositor in the loop.
+The camera follows a fixed path per scenario, so every run renders exactly the same frames. The CPU waits for the GPU every frame. That serialises the work: the numbers are per-frame costs (latency), not pipelined throughput, and there is no vsync or compositor in the loop.
 
 ### Scenarios
 
-| Name | View radius (chunks) | Region | Purpose |
-|---|---|---|---|
-| `small` | 8 | 19×19×5 chunks | quick check, CI smoke |
-| `default` | 16 | 35×35×5 chunks | the number we track |
-| `far` | 32 | 67×67×5 chunks | scaling and memory |
+| Name | View radius (chunks) | Region | Camera path | Purpose |
+|---|---|---|---|---|
+| `small` | 8 | 19×19×5 chunks | orbit at y 150, looking down ahead | quick check, CI smoke |
+| `default` | 16 | 35×35×5 chunks | same orbit | the number we track |
+| `far` | 32 | 67×67×5 chunks | same orbit | scaling and memory |
+| `cave` | 16 | 35×35×5 chunks | along a sealed 6×8-block tunnel carved at y 8–16 under the whole terrain, swaying ±0.35 rad | occlusion: almost nothing behind the tunnel walls is visible |
+| `mountain` | 16 | 35×35×5 chunks | ground-level walk (eye 2.7 blocks above the surface) across the hills, panning ±0.6 rad | occlusion by ridges in front of valleys |
+| `fly-fast` | 16 | 35×35×5 chunks | two straight passes at y 125, ~2.6 blocks per frame, with a teleport to the second pass halfway | streaming stress once streaming exists; today a static region |
+
+`cave` uses its own terrain (the default heightmap plus the carved tunnel, `TerrainSettings::carved_air`), so its mesh hash differs from the other scenarios. The other five share the `default` heightmap. `vx --screenshot out.png --scenario cave --at 0.3` renders one frame of any scenario's path for a visual check.
 
 Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. `--shading flat|textured` (default `textured`) picks the terrain surface; the report records it with the texture hash, and `bench-compare` warns when the two runs differ in surface, so a flat-vs-textured comparison is explicit. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
 
@@ -33,6 +38,19 @@ Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--rep
 - **Same-work check.** `bench-compare` warns when the two runs rendered different content (quad count or hash differ), because their timings then cover different work.
 - **Environment capture.** Each report records the commit, dirty flag, build profile, rustc version, RUSTFLAGS, OS, CPU, core counts, RAM, GPU name, backend, driver and render tier. `bench-compare` warns when machine, GPU, driver or compiler differ.
 - **Build checks.** Debug builds are flagged and `bench-compare` refuses them. Runs on software adapters (lavapipe, WARP) are flagged as meaningless for GPU numbers.
+
+### Culling ladder
+
+After the timed frames, `vx bench` samples 24 evenly spaced frames of the measured path and records how much work each culling stage would leave (`visibility.ladder` in the JSON, printed after the timings). Nothing is culled at render time today: the ladder says what a culler could save, and it is the yardstick for backlog B-06 and B-07.
+
+| Stage | Chunks counted | Draws and quads counted |
+|---|---|---|
+| `resident` | every uploaded chunk | every direction draw |
+| `frustum` | chunk AABB intersects the view frustum (CPU test, reverse-Z near plane, no far plane) | all draws of those chunks |
+| `frustum+facing` | chunks with at least one direction that can face the camera | only those directions (+X faces need `camera.x > chunk.min.x + 1`, and so on) |
+| `pixel-visible` | chunks that own at least one pixel in a chunk-id render at the bench resolution | the facing draws of those chunks |
+
+`pixel-visible` is the ceiling for a perfect chunk-granular occlusion culler: it renders the scene with each pixel holding its chunk slot (`ChunkIdPass`, `R32Uint`), reads it back and counts distinct slots. Its quads are whole facing draws, not individually visible quads. The ladder depends only on the scene, the path and the resolution, not on the GPU, so any machine produces the same counts (rasterisation rules may change a chunk at a pixel edge). The graph and Hi-Z rungs from backlog B-07 get their own stages when those cullers exist, together with the culling-off image-identity check.
 
 ### How `bench-compare` decides
 
@@ -64,7 +82,7 @@ scripts/bench-baseline.sh noah-desktop
 .\scripts\bench-baseline.ps1 -Label noah-desktop
 ```
 
-The script builds the release binary, saves `--probe` output to `adapter.txt`, then runs `small`, `default` and `far` with default settings. Everything goes to `benchmarks/baselines/<label>/`. On a desktop GPU each scenario should take well under a few minutes. Use a stable, descriptive label such as `noah-desktop-rtx4070`, and keep using it.
+The script builds the release binary, saves `--probe` output to `adapter.txt`, then runs all six scenarios (`small`, `default`, `far`, `cave`, `mountain`, `fly-fast`) with default settings. Everything goes to `benchmarks/baselines/<label>/`. On a desktop GPU each scenario should take well under a few minutes. Use a stable, descriptive label such as `noah-desktop-rtx4070`, and keep using it.
 
 Run the script twice, a few minutes apart, and compare the two `default` files:
 

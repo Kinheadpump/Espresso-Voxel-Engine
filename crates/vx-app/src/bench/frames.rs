@@ -1,10 +1,9 @@
 use std::time::Instant;
 
-use glam::Vec3;
-use vx_core::CHUNK_SIZE;
 use vx_render::{
-    FlyCamera, GpuContext, GpuPassTimer, OffscreenTarget, TerrainRenderer, begin_terrain_pass,
+    CameraUniform, GpuContext, GpuPassTimer, OffscreenTarget, TerrainRenderer, begin_terrain_pass,
 };
+use vx_world::TerrainGenerator;
 
 use super::BenchOptions;
 
@@ -14,26 +13,33 @@ pub struct FrameMicros {
     pub wall: Vec<Vec<f64>>,
 }
 
-const ORBIT_HEIGHT: f32 = 150.0;
-const LOOK_AHEAD_RADIANS: f32 = 0.6;
-const LOOK_DOWN_HEIGHT: f32 = 70.0;
-
-fn camera_on_orbit(view_radius: u32, progress: f32) -> FlyCamera {
-    let orbit_radius = view_radius as f32 * CHUNK_SIZE as f32 * 0.5;
-    let angle = progress * std::f32::consts::TAU;
-    let point_on_orbit =
-        |angle: f32| Vec3::new(angle.cos() * orbit_radius, 0.0, angle.sin() * orbit_radius);
-    let position = point_on_orbit(angle) + Vec3::Y * ORBIT_HEIGHT;
-    let target = point_on_orbit(angle + LOOK_AHEAD_RADIANS) + Vec3::Y * LOOK_DOWN_HEIGHT;
-    FlyCamera::looking_at(position, target)
+/// Camera for every frame of one repeat: `warmup` frames then `measured` frames, both walking the
+/// scenario path from its start so warm-up touches the same data as the measured frames.
+pub fn path_cameras(options: &BenchOptions, terrain: &TerrainGenerator) -> Vec<CameraUniform> {
+    let aspect = options.width as f32 / options.height as f32;
+    let warmup = (0..options.warmup_frames).map(|frame| frame as f32);
+    let measured = (0..options.measured_frames).map(|frame| frame as f32);
+    warmup
+        .chain(measured)
+        .map(|frame| {
+            let progress = frame / options.measured_frames as f32;
+            options
+                .scenario
+                .camera_at(terrain, progress.fract())
+                .uniform(aspect)
+        })
+        .collect()
 }
 
-pub fn measure(options: &BenchOptions, gpu: &GpuContext, terrain: &TerrainRenderer) -> FrameMicros {
+pub fn measure(
+    options: &BenchOptions,
+    gpu: &GpuContext,
+    terrain: &TerrainRenderer,
+    cameras: &[CameraUniform],
+) -> FrameMicros {
     let target = OffscreenTarget::new(&gpu.device, options.width, options.height);
     let color_view = target.color_view();
     let timer = GpuPassTimer::new(&gpu.device, &gpu.queue);
-    let aspect = options.width as f32 / options.height as f32;
-    let view_radius = options.scenario.view_radius();
     let mut samples = FrameMicros {
         cpu_encode: Vec::new(),
         gpu_pass: timer.as_ref().map(|_| Vec::new()),
@@ -43,15 +49,10 @@ pub fn measure(options: &BenchOptions, gpu: &GpuContext, terrain: &TerrainRender
         let mut cpu_encode = Vec::with_capacity(options.measured_frames as usize);
         let mut gpu_pass = Vec::with_capacity(options.measured_frames as usize);
         let mut wall = Vec::with_capacity(options.measured_frames as usize);
-        for frame in 0..options.warmup_frames + options.measured_frames {
+        for (frame, camera) in (0u32..).zip(cameras) {
             let measured_index = frame.checked_sub(options.warmup_frames);
-            let path_progress =
-                measured_index.unwrap_or(frame) as f32 / options.measured_frames as f32;
             let started = Instant::now();
-            terrain.update_camera(
-                &gpu.queue,
-                &camera_on_orbit(view_radius, path_progress).uniform(aspect),
-            );
+            terrain.update_camera(&gpu.queue, camera);
             let mut encoder = gpu
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {

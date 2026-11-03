@@ -47,8 +47,58 @@ The `small` and `far` flags are run-to-run variation on the laptop, not code cha
 ### Findings
 
 - The GPU is lightly loaded: the terrain pass takes ~0.52 ms in `default` and ~1.95 ms in `far`.
-- Frame CPU encode grows with draw count although the renderer issues one `multi_draw_indirect` call, about 40–70 ns per draw (computed). Unexplained; tracked as `docs/BACKLOG.md` B-02.
+- Frame CPU encode grows with draw count although the renderer issues one `multi_draw_indirect` call, about 40–70 ns per draw (computed). Tracked as `docs/BACKLOG.md` B-02.
 - World generation costs ~2.5× meshing at every scale, so generation dominates region build time.
+
+## Occlusion scenarios and culling ladder: `noah-msi-rtx2060` (2026-11-03)
+
+- **Build:** PR #9 at `b2ee6a175ccc` (candidate) and `229487f9d90f` (base), release, rustc 1.97.1, built in a clean worktree; every report has `git_dirty=false`.
+- **Machine and settings:** as in the hardware baseline above (driver 616.92, AC power, High performance plan), default settings.
+- **Raw files:** `benchmarks/baselines/noah-msi-rtx2060/*-b2ee6a175ccc.json`.
+
+### Culling ladder (measured; mean of 24 sampled path frames at 1920×1080)
+
+What each culling stage would leave, as quads and as a share of resident quads. Nothing is culled at render time yet (`docs/BENCHMARKING.md` § Culling ladder).
+
+| Scenario | Resident chunks / quads | Frustum | Frustum + facing | Pixel-visible chunks | Pixel-visible quads |
+|---|---|---|---|---|---|
+| `default` | 2,826 / 986,380 | 352,755 (35.8%) | 242,105 (24.5%) | 435.2 | 183,421 (18.6%) |
+| `far` | 10,858 / 3,792,695 | 1,274,671 (33.6%) | 866,093 (22.8%) | 1,087.4 | 484,225 (12.8%) |
+| `cave` | 2,826 / 986,480 | 331,539 (33.6%) | 108,589 (11.0%) | 17.4 | 75 (0.008%) |
+| `mountain` | 2,826 / 986,380 | 327,929 (33.2%) | 203,986 (20.7%) | 48.3 | 21,573 (2.2%) |
+| `fly-fast` | 2,826 / 986,380 | 369,232 (37.4%) | 252,356 (25.6%) | 349.1 | 152,206 (15.4%) |
+
+The same ladder from lavapipe on the cloud VM (measured, all six scenarios, same code, 1920×1080) agrees to within 0.2 pixel-visible chunks per frame, which confirms the counts do not depend on the GPU.
+
+Findings:
+
+- Frustum culling alone leaves 33–37% of quads in every scenario, and adding the face-direction test leaves 11–26% (computed from the table). B-06 would cut submitted quads by ~4× from the air (estimate).
+- Occlusion beyond that is scene dependent. From the air (`default`, `fly-fast`) a perfect chunk-granular occlusion culler keeps 65–76% of the frustum+facing quads. On the ground (`mountain`) it keeps ~11%, underground (`cave`) under 0.1% (computed). B-07 is worth it for ground-level and underground views, not for flight.
+
+### Timings of the new scenarios (measured; median of 5 repeat medians, repeat spread in brackets)
+
+| Metric | `cave` | `mountain` | `fly-fast` |
+|---|---|---|---|
+| World generation | 175.1 ms | 179.9 ms | 178.8 ms |
+| Meshing | 67.0 ms | 68.5 ms | 69.4 ms |
+| Frame CPU encode | 315 µs (34%) | 434 µs (6%) | 433 µs (31%) |
+| Frame GPU terrain pass | 464 µs (4%) | 486 µs (5%) | 497 µs (5%) |
+| Frame wall | 917 µs (30%) | 1,212 µs (6%) | 1,200 µs (25%) |
+| GPU terrain pass p99 (pooled) | 634 µs | 813 µs | 1,082 µs |
+
+Every chunk is still drawn, so these GPU times show the cost of drawing occluded geometry: `cave` shows ~0.01% of resident quads on screen (computed from the ladder) and still costs ~0.46 ms of GPU time.
+
+### PR #9 before/after (`vx bench-compare`, base `229487f` → candidate `b2ee6a1`)
+
+| Metric | `default` run 1 | `default` run 2 | `far` |
+|---|---|---|---|
+| World generation | +3.1%, within noise | +0.3%, within noise | +4.1% (noise 3.6%), SLOWER |
+| Meshing | within noise | within noise | within noise |
+| Frame CPU encode | −2.0%, within noise | +16.1% (noise 22.8%), within noise | −0.6%, within noise |
+| Frame GPU terrain pass | +0.0%, within noise | −0.7%, within noise | −0.0%, within noise |
+| Frame wall | −1.7%, within noise | +20.1% (noise 28.6%), within noise | −0.2%, within noise |
+
+The run-2 encode and wall changes come from one outlier base run (frame wall 1,020 µs against 1,221–1,242 µs in the other three `default` runs). The `far` world-generation flag is just past the noise band and not repeated in `default`. Its only plausible source was a refactor of `TerrainGenerator::surface_heights` through a new `surface_height_at`; that refactor was reverted before merge, so the merged generation loop is the measured base code plus one per-chunk `Option` check. The reverted state was not re-measured.
 
 ## Cloud VM reference (2026-11-03)
 

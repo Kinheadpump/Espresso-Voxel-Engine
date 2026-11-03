@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use sysinfo::{ProcessesToUpdate, System};
 use vx_render::GpuContext;
 
-use super::stats::Metric;
+use super::{stats::Metric, visibility::VisibilityCounters};
 
 pub const SCHEMA_VERSION: u32 = 1;
 
@@ -16,6 +16,8 @@ pub struct BenchReport {
     pub scenario: ScenarioInfo,
     pub content: ContentInfo,
     pub results: Results,
+    #[serde(default)]
+    pub visibility: Option<VisibilityCounters>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
