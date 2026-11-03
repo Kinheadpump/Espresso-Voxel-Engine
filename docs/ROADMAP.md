@@ -1,6 +1,6 @@
 # Roadmap
 
-What we build next, in order of expected impact on the core goal (view distance and frame time per watt), measurement infrastructure first. Each item names how it will be verified. Unscheduled ideas, ranked, live in `docs/BACKLOG.md` (`B-nn` ids); an item moves here when it gets a slot.
+What we build next, in order of expected impact on the core goal (view distance and frame time per watt), measurement infrastructure first. Each item names how it will be verified. Unscheduled ideas, ranked, live in `docs/BACKLOG.md` (`B-nn` ids); an item moves here when it gets a slot. Which sprint each item belongs to, and the benchmark gates that close it, are in `docs/SPRINTS.md`.
 
 ## Done (2026-11-03)
 
