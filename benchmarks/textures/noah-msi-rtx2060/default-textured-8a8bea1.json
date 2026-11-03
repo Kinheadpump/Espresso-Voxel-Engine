@@ -1,0 +1,177 @@
+{
+  "schema": 1,
+  "unix_time": 1793720202,
+  "build": {
+    "git_commit": "8a8bea163fc5",
+    "git_dirty": "false",
+    "profile": "release",
+    "debug_assertions": false,
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "rustflags": "none"
+  },
+  "system": {
+    "os": "Windows 11 Home",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "physical_cores": 6,
+    "logical_cores": 12,
+    "total_memory_mib": 16225
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 2060",
+    "backend": "Vulkan",
+    "device_type": "DiscreteGpu",
+    "driver": "NVIDIA",
+    "driver_info": "616.92",
+    "tier": "GpuDrivenWithCount",
+    "timestamps": true
+  },
+  "scenario": {
+    "name": "default",
+    "seed": 1337,
+    "view_radius": 16,
+    "vertical_chunks": 5,
+    "threads": 12,
+    "width": 1920,
+    "height": 1080,
+    "warmup_frames": 120,
+    "measured_frames": 600,
+    "repeats": 5,
+    "frame_sync": "offscreen, CPU waits for GPU completion every frame"
+  },
+  "content": {
+    "chunks_generated": 6125,
+    "chunks_meshed": 2826,
+    "quads": 986380,
+    "mesh_hash": "fab6872fe1853d8e",
+    "voxel_heap_bytes": 16843696,
+    "geometry_buffer_bytes": 8088128,
+    "draws": 9492,
+    "shading": "textured",
+    "texture_bytes": 10912,
+    "texture_hash": "0bcc42998c26331f"
+  },
+  "results": {
+    "world_generation_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        192.3314,
+        190.8287,
+        179.5147,
+        174.5984,
+        174.25760000000002
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 174.25760000000002,
+        "p50": 179.5147,
+        "p90": 191.73032,
+        "p99": 192.271292,
+        "max": 192.3314,
+        "mean": 182.30616,
+        "stddev": 7.811789248718883
+      }
+    },
+    "meshing_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        70.6136,
+        73.9392,
+        69.5741,
+        68.9408,
+        70.4796
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 68.9408,
+        "p50": 70.4796,
+        "p90": 72.60896,
+        "p99": 73.806176,
+        "max": 73.9392,
+        "mean": 70.70946,
+        "stddev": 1.726872650313277
+      }
+    },
+    "upload_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        7.7658,
+        7.891900000000001,
+        7.9361,
+        7.528499999999999,
+        7.7379
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 7.528499999999999,
+        "p50": 7.7658,
+        "p90": 7.91842,
+        "p99": 7.9343319999999995,
+        "max": 7.9361,
+        "mean": 7.77204,
+        "stddev": 0.14268728885223128
+      }
+    },
+    "frame_cpu_encode_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        357.3,
+        414.35,
+        442.0,
+        442.05,
+        440.3
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 301.6,
+        "p50": 438.54999999999995,
+        "p90": 469.01,
+        "p99": 689.3749999999982,
+        "max": 1991.0000000000002,
+        "mean": 433.89060000000035,
+        "stddev": 79.2184094658979
+      }
+    },
+    "frame_gpu_terrain_pass_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        567.472,
+        552.72,
+        552.416,
+        570.8,
+        552.688
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 532.48,
+        "p50": 557.056,
+        "p90": 589.36,
+        "p99": 962.5603199999999,
+        "max": 978.4,
+        "mean": 574.0194879999998,
+        "stddev": 72.26616227883687
+      }
+    },
+    "frame_wall_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        1221.45,
+        1249.35,
+        1286.45,
+        1348.9,
+        1276.15
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 938.0,
+        "p50": 1273.15,
+        "p90": 1392.41,
+        "p99": 1560.3559999999986,
+        "max": 2017.5000000000002,
+        "mean": 1274.035000000003,
+        "stddev": 112.7588980450471
+      }
+    },
+    "process_resident_mib": 92.5546875
+  }
+}
