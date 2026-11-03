@@ -14,6 +14,7 @@ pub enum Mode {
     Compare {
         baseline: PathBuf,
         candidate: PathBuf,
+        allow_shading_change: bool,
     },
 }
 
@@ -40,7 +41,7 @@ const USAGE: &str = "usage:
   vx bench [--scenario small|default|far|cave|mountain|fly-fast] [--repeats N] [--frames N] [--warmup N]
            [--threads N] [--resolution WxH] [--shading flat|textured]
            [--indirect-validation on|off] [--out <file.json>]
-  vx bench-compare <baseline.json> <candidate.json>";
+  vx bench-compare <baseline.json> <candidate.json> [--allow-shading-change]";
 
 fn next_value<T: std::str::FromStr>(
     args: &mut impl Iterator<Item = String>,
@@ -70,11 +71,21 @@ impl Options {
                 return Ok(options);
             }
             Some("bench-compare") => {
-                let baseline = args.next().context(USAGE)?.into();
-                let candidate = args.next().context(USAGE)?.into();
+                let mut paths = Vec::new();
+                let mut allow_shading_change = false;
+                for arg in args {
+                    match arg.as_str() {
+                        "--allow-shading-change" => allow_shading_change = true,
+                        _ => paths.push(PathBuf::from(arg)),
+                    }
+                }
+                let [baseline, candidate] = <[PathBuf; 2]>::try_from(paths).map_err(|_| {
+                    anyhow::anyhow!("bench-compare needs two report paths\n{USAGE}")
+                })?;
                 options.mode = Mode::Compare {
                     baseline,
                     candidate,
+                    allow_shading_change,
                 };
                 return Ok(options);
             }

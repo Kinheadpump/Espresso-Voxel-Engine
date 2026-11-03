@@ -1,6 +1,6 @@
 # Texture and visual style concept
 
-Status: **Direction chosen 2026-11-03: A, crisp 16 px** (Noah). ADR-0014 stays Proposed until phase 2's GPU measurement is in.
+Status: **Accepted and implemented** (ADR-0014). Direction A, crisp 16 px, chosen by Noah on 2026-11-03. Cost on the RTX 2060: +8.6% / +7.8% GPU terrain pass in `default`, +2.7% in `far` (measured, `docs/PERFORMANCE.md`), within the +10% budget.
 
 Phase 2 is implemented (see below); the engine renders textured by default. The concept images in `docs/textures/` (all except `engine-*.png`) come from `tools/texture-concept/` (Python, numpy + Pillow, deterministic). The mock-ups are a CPU ray-caster that copies `terrain.wgsl`'s shading (per-direction shade, exponential fog), so the only thing that changes between them is the surface. They are **illustrations, not engine renders and not performance data**.
 
@@ -95,7 +95,7 @@ Result: crisp texel edges up close, filtered mips at distance, one sample, a han
 | Embedded decode, CPU sRGB-correct mips, array + sampler (linear, anisotropy 8, `Repeat`) | `crates/vx-render/src/block_textures.rs` |
 | Face lookup per vertex, world-space UVs, rotation hash, texel snap | `crates/vx-render/src/shaders/terrain.wgsl` |
 | `override TEXTURED` pipeline constant: flat and textured are separate pipelines, so the flat path is the old shader | `crates/vx-render/src/terrain.rs` |
-| `--shading flat\|textured` (windowed, screenshot, bench); report fields `shading`, `texture_bytes`, `texture_hash`; compare warns on a surface change | `crates/vx-app` |
+| `--shading flat\|textured` (windowed and screenshot default `textured`, bench default `flat`); report fields `shading`, `texture_bytes`, `texture_hash`; `bench-compare` refuses mixed shading unless `--allow-shading-change` | `crates/vx-app` |
 
 The generator stays an offline Python tool instead of a Rust port: its output is committed and the engine never runs it, so porting it would add code without changing anything at runtime.
 
@@ -103,6 +103,5 @@ Engine frames (lavapipe, `--radius 8` and a close-up): `textures/engine-overview
 
 Still to do:
 
-1. Opaque-pass GPU ms flat vs textured on Noah's GPU (`default`, `far`); record in `docs/PERFORMANCE.md`; accept or amend ADR-0014.
-2. Anisotropy 4/8/16 comparison, and plain `Nearest` mag as the reference.
-3. Gravel, log, planks once terrain generates them; leaves (alpha-tested) and water (transparent pass) with roadmap 17.
+1. Anisotropy 4/8/16 comparison, and plain `Nearest` mag as the reference (only if a later change needs the headroom; `default` uses most of the budget).
+2. Gravel, log, planks once terrain generates them; leaves (alpha-tested) and water (transparent pass) with roadmap 17.

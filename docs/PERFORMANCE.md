@@ -50,6 +50,35 @@ The `small` and `far` flags are run-to-run variation on the laptop, not code cha
 - Frame CPU encode grows with draw count although the renderer issues one `multi_draw_indirect` call, about 40–70 ns per draw (computed). Tracked as `docs/BACKLOG.md` B-02.
 - World generation costs ~2.5× meshing at every scale, so generation dominates region build time.
 
+## Textured vs flat shading: `noah-msi-rtx2060` (2026-11-03)
+
+- **Change:** 16 px block texture array (PR #8, ADR-0014). `--shading flat` is the previous shader, built as a separate pipeline.
+- **Machine:** as the hardware baseline above (i7-9750H, RTX 2060, Vulkan, driver 616.92, AC power).
+- **Build:** commit `8a8bea163fc5`, release, rustc 1.97.1, default bench settings (5 repeats, 120 warm-up + 600 measured frames, 1920×1080).
+- **Command:** `vx bench --scenario <s> --shading flat|textured`, then `vx bench-compare`. `default` ran twice, the second time textured first.
+- **Raw files:** `benchmarks/textures/noah-msi-rtx2060/` (PR #10).
+
+Content is identical between flat and textured (same `mesh_hash` per scenario). Texture memory: 10,912 B (measured, `content.texture_bytes`).
+
+### GPU terrain pass (measured; median of 5 repeat medians)
+
+| Scenario | Order | Flat | Textured | Change | Noise band | Budget (≤ +10%) |
+|---|---|---|---|---|---|---|
+| `default` | flat first | 508.8 µs | 552.7 µs | +8.6% | 6.9% | met |
+| `default` | textured first | 520.2 µs | 561.0 µs | +7.8% | 3.6% | met |
+| `far` | flat first | 1,769.5 µs | 1,816.8 µs | +2.7% | 2.0% | met |
+
+### Other metrics
+
+- World generation, meshing and upload are within noise in every pair, as expected: texturing does not touch them.
+- Frame CPU encode and frame wall in the first `default` pair: +28.8% and +28.0%. The reverse-order pair gave −0.3% and +3.2% (within noise). The first flat run had an unusually low encode time (341.9 µs against 438.1 µs in the second), so this is CPU-side run-to-run variation, not a texture cost.
+- `far`: CPU encode +2.8% and frame wall +2.6%, just outside the 2% noise floor; a single run, so not judged (sprint rule 6).
+
+### Findings
+
+- Textured shading costs about 40–45 µs per frame at radius 16 and about 47 µs at radius 32 (computed from the table). The cost barely grows with 3.8× the quads, which points to a per-pixel cost at a fixed resolution rather than the per-vertex face lookup (inferred, not profiled).
+- `default` uses most of the 10% budget. The levers, if a later change needs the headroom: anisotropy 4 instead of 8, and dropping the texel snap (it costs ALU, not fetches). Both are quick A/B runs with `--shading textured` on both sides.
+
 ## Occlusion scenarios and culling ladder: `noah-msi-rtx2060` (2026-11-03)
 
 - **Build:** PR #9 at `b2ee6a175ccc` (candidate) and `229487f9d90f` (base), release, rustc 1.97.1, built in a clean worktree; every report has `git_dirty=false`.

@@ -46,7 +46,7 @@ impl BenchOptions {
             threads: std::thread::available_parallelism().map_or(1, |n| n.get() as u32),
             width: 1920,
             height: 1080,
-            shading: Shading::Textured,
+            shading: Shading::Flat,
             indirect_validation: IndirectValidation::for_build(),
             out: None,
         }
