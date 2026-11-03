@@ -138,4 +138,4 @@ Engine frames, same camera, before and after (lavapipe):
 
 ![close](textures/rev2-before-after-close.png)
 
-Renderer, shader, layer count and texture size are unchanged, so texture memory stays 10.7 KiB and per-fragment work is identical; only the texel values and the texture hash change. GPU cost is re-checked on the RTX 2060 against the same +10% budget (`docs/PERFORMANCE.md`).
+Renderer, shader, layer count and texture size are unchanged, so texture memory stays 10.7 KiB and per-fragment work is identical; only the texel values and the texture hash change. On the RTX 2060 the textured pass measured 557.1 and 555.0 µs (two runs, opposite order), the same as revision 1; against flat that is +10.6% and +8.3%, which spans the +10% budget because the flat runs vary (measured, `docs/PERFORMANCE.md`). The budget has no margin left: the next fragment-side change needs to buy headroom first (anisotropy 4 or no texel snap).
