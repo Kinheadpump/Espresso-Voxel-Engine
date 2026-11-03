@@ -1,0 +1,11 @@
+baseline : benchmarks\textures\noah-msi-rtx2060\default-flat-8a8bea1.json (8a8bea163fc5)
+candidate: benchmarks\textures\noah-msi-rtx2060\default-textured-8a8bea1.json (8a8bea163fc5)
+WARNING: surface differs (shading flat -> textured, textures none -> 0bcc42998c26331f): frame timings include the shading change
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                   181.2ms     179.5ms    -0.9%   10.1%  within noise
+meshing                             68.3ms      70.5ms    +3.1%   10.1%  within noise
+upload                               7.8ms       7.8ms    -0.5%    9.1%  within noise
+frame CPU encode                   341.9us     440.3us   +28.8%   19.2%  SLOWER
+frame GPU terrain pass             508.8us     552.7us    +8.6%    6.9%  SLOWER
+frame wall (CPU+GPU, synced)       997.1us    1276.2us   +28.0%   10.0%  SLOWER
