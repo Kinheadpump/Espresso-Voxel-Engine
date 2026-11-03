@@ -1,10 +1,11 @@
 use std::time::{Duration, Instant};
 
 use rayon::prelude::*;
-use vx_core::{BlockId, CHUNK_SIZE, ChunkPos};
+use vx_core::{BlockId, CHUNK_AREA, CHUNK_SIZE, ChunkPos};
 use vx_mesh::{BinaryGreedyMesher, ChunkMesh, new_padded_voxels};
 use vx_world::{
-    ChunkVoxels, ChunkWindow, TerrainGenerator, TerrainSettings, gather_padded, new_dense_chunk,
+    ChunkVoxels, ChunkWindow, DenseChunk, TerrainGenerator, TerrainSettings, gather_padded,
+    new_dense_chunk,
 };
 
 pub const WORLD_HEIGHT_BLOCKS: usize = 160;
@@ -19,6 +20,27 @@ pub struct MeshedRegion {
     pub mesh_time: Duration,
 }
 
+fn column_bases_within(radius: i32) -> impl Iterator<Item = ChunkPos> {
+    (-radius..=radius).flat_map(move |x| {
+        (-radius..=radius).map(move |z| ChunkPos::new(x, VERTICAL_CHUNKS.start, z))
+    })
+}
+
+fn generate_column(
+    generator: &TerrainGenerator,
+    base: ChunkPos,
+    scratch: &mut DenseChunk,
+) -> Vec<(ChunkPos, ChunkVoxels)> {
+    let mut heights = [0; CHUNK_AREA];
+    generator.surface_heights(base, &mut heights);
+    VERTICAL_CHUNKS
+        .map(|y| {
+            let pos = ChunkPos::new(base.0.x, y, base.0.z);
+            (pos, generator.generate_in_column(pos, &heights, scratch))
+        })
+        .collect()
+}
+
 fn columns_within(radius: i32) -> impl Iterator<Item = ChunkPos> {
     (-radius..=radius).flat_map(move |x| {
         (-radius..=radius).flat_map(move |z| VERTICAL_CHUNKS.map(move |y| ChunkPos::new(x, y, z)))
@@ -30,12 +52,13 @@ pub fn build_region(view_radius: u32, terrain: TerrainSettings) -> MeshedRegion 
     let radius = view_radius as i32;
     let generator = TerrainGenerator::new(terrain);
     let generate_started = Instant::now();
-    let generated: Vec<(ChunkPos, ChunkVoxels)> = columns_within(radius + 1)
+    let generated: Vec<(ChunkPos, ChunkVoxels)> = column_bases_within(radius + 1)
         .collect::<Vec<_>>()
         .into_par_iter()
-        .map_init(new_dense_chunk, |scratch, pos| {
-            (pos, generator.generate(pos, scratch))
+        .map_init(new_dense_chunk, |scratch, base| {
+            generate_column(&generator, base, scratch)
         })
+        .flatten_iter()
         .collect();
     let generate_time = generate_started.elapsed();
     profiling::scope!("assemble_and_mesh_region");
