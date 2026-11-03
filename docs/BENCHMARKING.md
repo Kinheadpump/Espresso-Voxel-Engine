@@ -25,7 +25,7 @@ The camera flies a fixed orbit, so every run renders exactly the same frames. Th
 | `default` | 16 | 35×35×5 chunks | the number we track |
 | `far` | 32 | 67×67×5 chunks | scaling and memory |
 
-Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
+Defaults: 5 repeats, 120 warm-up frames, 600 measured frames, 1920×1080. `--repeats`, `--frames`, `--warmup`, `--threads` and `--resolution WxH` override them. `--shading flat|textured` (default `textured`) picks the terrain surface; the report records it with the texture hash, and `bench-compare` warns when the two runs differ in surface, so a flat-vs-textured comparison is explicit. Compare only runs that use the same values: `bench-compare` refuses to compare runs whose scenario parameters differ.
 
 ### Fairness guards built into the tool
 

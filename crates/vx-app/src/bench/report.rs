@@ -73,6 +73,30 @@ pub struct ContentInfo {
     pub voxel_heap_bytes: usize,
     pub geometry_buffer_bytes: u64,
     pub draws: u32,
+    #[serde(default = "flat_shading")]
+    pub shading: String,
+    #[serde(default)]
+    pub texture_bytes: u64,
+    #[serde(default)]
+    pub texture_hash: String,
+}
+
+fn flat_shading() -> String {
+    "flat".into()
+}
+
+impl ContentInfo {
+    pub fn same_geometry(&self, other: &Self) -> bool {
+        self.chunks_generated == other.chunks_generated
+            && self.chunks_meshed == other.chunks_meshed
+            && self.quads == other.quads
+            && self.mesh_hash == other.mesh_hash
+            && self.draws == other.draws
+    }
+
+    pub fn same_surface(&self, other: &Self) -> bool {
+        self.shading == other.shading && self.texture_hash == other.texture_hash
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

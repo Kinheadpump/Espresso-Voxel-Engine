@@ -2,7 +2,7 @@
 
 Status: **Direction chosen 2026-11-03: A, crisp 16 px** (Noah). ADR-0014 stays Proposed until phase 2's GPU measurement is in.
 
-All images in `docs/textures/` come from `tools/texture-concept/` (Python, numpy + Pillow, deterministic). The mock-ups are a CPU ray-caster that copies `terrain.wgsl`'s shading (per-direction shade, exponential fog), so the only thing that changes between them is the surface. They are **illustrations, not engine renders and not performance data**.
+Phase 2 is implemented (see below); the engine renders textured by default. The concept images in `docs/textures/` (all except `engine-*.png`) come from `tools/texture-concept/` (Python, numpy + Pillow, deterministic). The mock-ups are a CPU ray-caster that copies `terrain.wgsl`'s shading (per-direction shade, exponential fog), so the only thing that changes between them is the surface. They are **illustrations, not engine renders and not performance data**.
 
 ## Candidate directions
 
@@ -86,10 +86,23 @@ Result: crisp texel edges up close, filtered mips at distance, one sample, a han
 - Decide with opaque-pass GPU ms on Noah's GPU, `default` and `far` scenarios, flat vs textured, and anisotropy 1/4/8/16. **Proposed budget:** textured adds at most 10% to opaque-pass GPU ms over flat at radius 32. Software-adapter (lavapipe) numbers never count.
 - Headless screenshot test on lavapipe for correctness only: textures orient upright on all six faces, no seams at chunk borders.
 
-## Phase 2 steps (after approval)
+## Phase 2: implemented
 
-1. `vx-core`: `BlockFaces` table. `tools/texgen`: port the generator to a Rust tool that writes `assets/blocks/*.png` (committed, hand-editable).
-2. `vx-render`: `block_textures.rs` (array upload, CPU mips, sampler), bind group entries, shader UVs, snap filter, rotation hash.
-3. `vx-app`: `--shading`, bench report fields, compare guard.
-4. Measure, record in `docs/PERFORMANCE.md`, accept or amend ADR-0014.
-5. Later, with their passes: leaves (alpha-tested, alpha-to-coverage mips), water (transparent pass).
+| Piece | Where |
+|---|---|
+| Layer enum, `BlockFaces`, packed GPU table | `crates/vx-core/src/textures.rs` |
+| 16 px PNGs (committed, hand-editable; regenerate with `python3 tools/texture-concept/texgen.py assets/blocks 16`) | `assets/blocks/` |
+| Embedded decode, CPU sRGB-correct mips, array + sampler (linear, anisotropy 8, `Repeat`) | `crates/vx-render/src/block_textures.rs` |
+| Face lookup per vertex, world-space UVs, rotation hash, texel snap | `crates/vx-render/src/shaders/terrain.wgsl` |
+| `override TEXTURED` pipeline constant: flat and textured are separate pipelines, so the flat path is the old shader | `crates/vx-render/src/terrain.rs` |
+| `--shading flat\|textured` (windowed, screenshot, bench); report fields `shading`, `texture_bytes`, `texture_hash`; compare warns on a surface change | `crates/vx-app` |
+
+The generator stays an offline Python tool instead of a Rust port: its output is committed and the engine never runs it, so porting it would add code without changing anything at runtime.
+
+Engine frames (lavapipe, `--radius 8` and a close-up): `textures/engine-overview-textured.png`, `textures/engine-closeup-textured.png`. Mesh hash is identical between flat and textured runs (checked with `vx bench`). Texture memory: 8 layers × 1,364 B = 10.7 KiB (reported by `vx bench`).
+
+Still to do:
+
+1. Opaque-pass GPU ms flat vs textured on Noah's GPU (`default`, `far`); record in `docs/PERFORMANCE.md`; accept or amend ADR-0014.
+2. Anisotropy 4/8/16 comparison, and plain `Nearest` mag as the reference.
+3. Gravel, log, planks once terrain generates them; leaves (alpha-tested) and water (transparent pass) with roadmap 17.

@@ -3,3 +3,4 @@
 *.tracy
 /benchmarks/results
 /tools/*/target
+__pycache__/

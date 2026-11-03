@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::{Context, Result};
-use vx_render::{ChunkMeshRef, GpuContext, TerrainRenderer};
+use vx_render::{ChunkMeshRef, GpuContext, Shading, TerrainRenderer};
 use vx_world::TerrainSettings;
 
 pub use compare::compare;
@@ -60,6 +60,7 @@ pub struct BenchOptions {
     pub threads: u32,
     pub width: u32,
     pub height: u32,
+    pub shading: Shading,
     pub out: Option<PathBuf>,
 }
 
@@ -73,6 +74,7 @@ impl BenchOptions {
             threads: std::thread::available_parallelism().map_or(1, |n| n.get() as u32),
             width: 1920,
             height: 1080,
+            shading: Shading::Textured,
             out: None,
         }
     }
@@ -108,7 +110,12 @@ pub fn run(options: &BenchOptions) -> Result<()> {
     let (region, generation_ms, meshing_ms) = measure_region(options, terrain_settings, &pool)?;
     let process_resident_mib = report::process_resident_mib();
 
-    let mut terrain = TerrainRenderer::new(&gpu.device, vx_render::OffscreenTarget::FORMAT);
+    let mut terrain = TerrainRenderer::new(
+        &gpu.device,
+        &gpu.queue,
+        vx_render::OffscreenTarget::FORMAT,
+        options.shading,
+    )?;
     let upload_ms = measure_upload(options, &gpu, &mut terrain, &region);
 
     log::info!(
@@ -150,6 +157,15 @@ pub fn run(options: &BenchOptions) -> Result<()> {
             voxel_heap_bytes: region.voxel_heap_bytes,
             geometry_buffer_bytes: terrain.geometry_buffer_bytes(),
             draws: terrain.draw_count(),
+            shading: terrain.shading().name().into(),
+            texture_bytes: match terrain.shading() {
+                Shading::Flat => 0,
+                Shading::Textured => terrain.texture_bytes(),
+            },
+            texture_hash: match terrain.shading() {
+                Shading::Flat => String::new(),
+                Shading::Textured => format!("{:016x}", terrain.texture_hash()),
+            },
         },
         results: Results {
             world_generation_ms: Metric::from_single_samples("ms", &generation_ms),
