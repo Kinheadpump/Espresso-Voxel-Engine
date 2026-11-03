@@ -81,6 +81,12 @@ pub struct ContentInfo {
     pub texture_bytes: u64,
     #[serde(default)]
     pub texture_hash: String,
+    #[serde(default = "indirect_validation_on")]
+    pub indirect_validation: bool,
+}
+
+fn indirect_validation_on() -> bool {
+    true
 }
 
 fn flat_shading() -> String {
@@ -107,6 +113,10 @@ pub struct Results {
     pub meshing_ms: Metric,
     pub upload_ms: Metric,
     pub frame_cpu_encode_us: Metric,
+    #[serde(default)]
+    pub frame_cpu_record_us: Option<Metric>,
+    #[serde(default)]
+    pub frame_cpu_submit_us: Option<Metric>,
     pub frame_gpu_terrain_pass_us: Option<Metric>,
     pub frame_wall_us: Metric,
     pub process_resident_mib: Option<f64>,

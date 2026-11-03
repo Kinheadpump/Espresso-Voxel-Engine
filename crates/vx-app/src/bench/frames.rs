@@ -9,6 +9,8 @@ use super::BenchOptions;
 
 pub struct FrameMicros {
     pub cpu_encode: Vec<Vec<f64>>,
+    pub cpu_record: Vec<Vec<f64>>,
+    pub cpu_submit: Vec<Vec<f64>>,
     pub gpu_pass: Option<Vec<Vec<f64>>>,
     pub wall: Vec<Vec<f64>>,
 }
@@ -42,17 +44,22 @@ pub fn measure(
     let timer = GpuPassTimer::new(&gpu.device, &gpu.queue);
     let mut samples = FrameMicros {
         cpu_encode: Vec::new(),
+        cpu_record: Vec::new(),
+        cpu_submit: Vec::new(),
         gpu_pass: timer.as_ref().map(|_| Vec::new()),
         wall: Vec::new(),
     };
     for _ in 0..options.repeats {
         let mut cpu_encode = Vec::with_capacity(options.measured_frames as usize);
+        let mut cpu_record = Vec::with_capacity(options.measured_frames as usize);
+        let mut cpu_submit = Vec::with_capacity(options.measured_frames as usize);
         let mut gpu_pass = Vec::with_capacity(options.measured_frames as usize);
         let mut wall = Vec::with_capacity(options.measured_frames as usize);
         for (frame, camera) in (0u32..).zip(cameras) {
             let measured_index = frame.checked_sub(options.warmup_frames);
             let started = Instant::now();
             terrain.update_camera(&gpu.queue, camera);
+            let record_started = Instant::now();
             let mut encoder = gpu
                 .device
                 .create_command_encoder(&wgpu::CommandEncoderDescriptor {
@@ -70,8 +77,11 @@ pub fn measure(
             if let Some(timer) = &timer {
                 timer.resolve(&mut encoder);
             }
-            gpu.queue.submit([encoder.finish()]);
-            let encoded = started.elapsed();
+            let command_buffer = encoder.finish();
+            let submit_started = Instant::now();
+            gpu.queue.submit([command_buffer]);
+            let submitted = Instant::now();
+            let encoded = submitted - started;
             let gpu_time = if let Some(timer) = &timer {
                 timer.read_after_submit(&gpu.device)
             } else {
@@ -81,6 +91,8 @@ pub fn measure(
             let completed = started.elapsed();
             if measured_index.is_some() {
                 cpu_encode.push(encoded.as_secs_f64() * 1e6);
+                cpu_record.push((submit_started - record_started).as_secs_f64() * 1e6);
+                cpu_submit.push((submitted - submit_started).as_secs_f64() * 1e6);
                 wall.push(completed.as_secs_f64() * 1e6);
                 if let Some(gpu_time) = gpu_time {
                     gpu_pass.push(gpu_time.as_secs_f64() * 1e6);
@@ -88,6 +100,8 @@ pub fn measure(
             }
         }
         samples.cpu_encode.push(cpu_encode);
+        samples.cpu_record.push(cpu_record);
+        samples.cpu_submit.push(cpu_submit);
         samples.wall.push(wall);
         if let Some(repeats) = samples.gpu_pass.as_mut() {
             if gpu_pass.is_empty() {

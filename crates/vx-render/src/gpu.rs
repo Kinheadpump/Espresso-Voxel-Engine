@@ -25,6 +25,25 @@ pub struct GpuContext {
     pub timestamps: bool,
 }
 
+/// wgpu's per-draw check of indirect arguments (`InstanceFlags::VALIDATION_INDIRECT_CALL`), on by
+/// default even in release. Off is only sound when every indirect argument is in range, and on
+/// D3D12 it also drops `first_vertex`/`first_instance` from the vertex builtins.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IndirectValidation {
+    On,
+    Off,
+}
+
+impl IndirectValidation {
+    pub fn from_name(name: &str) -> Option<Self> {
+        match name {
+            "on" => Some(Self::On),
+            "off" => Some(Self::Off),
+            _ => None,
+        }
+    }
+}
+
 const REQUIRED_FEATURES: wgpu::Features = wgpu::Features::INDIRECT_FIRST_INSTANCE;
 const OPTIONAL_FEATURES: wgpu::Features = wgpu::Features::MULTI_DRAW_INDIRECT_COUNT
     .union(wgpu::Features::TIMESTAMP_QUERY)
@@ -33,8 +52,18 @@ const OPTIONAL_FEATURES: wgpu::Features = wgpu::Features::MULTI_DRAW_INDIRECT_CO
 
 impl GpuContext {
     pub fn create_instance() -> wgpu::Instance {
+        Self::create_instance_with(IndirectValidation::On)
+    }
+
+    pub fn create_instance_with(indirect_validation: IndirectValidation) -> wgpu::Instance {
+        let mut flags = wgpu::InstanceFlags::from_build_config();
+        flags.set(
+            wgpu::InstanceFlags::VALIDATION_INDIRECT_CALL,
+            indirect_validation == IndirectValidation::On,
+        );
         wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
+            flags,
             ..wgpu::InstanceDescriptor::new_without_display_handle()
         })
     }
