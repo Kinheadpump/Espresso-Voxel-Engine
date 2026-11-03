@@ -324,6 +324,18 @@ Gate reading: world generation at `default` is at most half the S2 start (−51.
 
 All values measured (median of repeat medians). `small` frame numbers are too noisy to gate on. Windowed `default` (borderless 3440×1440, present mode Immediate): frame interval p50 896.3 µs, p99 1,486.5 µs, max 51,813.4 µs, repeat spread 3.2%, p99/p50 1.66; CPU encode p50 358.1 µs (measured).
 
+## Camera-relative rendering (ADR-0016): `noah-msi-rtx2060` (2026-11-03)
+
+Base `c830ca7` against candidate `d2a2f59`, alternating runs, flat shading, data in `benchmarks/baselines/noah-msi-rtx2060/camera-relative/`. Content hashes are identical (`default` `fab6872fe1853d8e`, `far` `4229b10348a4dc42`).
+
+| Metric (measured, `vx bench-compare`) | `default` run 1 | `default` run 2 | `far` |
+|---|---|---|---|
+| Frame GPU terrain pass | 503.7 → 509.6 µs, +1.2% (7.6%) within noise | 509.9 → 514.0 µs, +0.8% (7.8%) within noise | 1,785.1 → 1,803.7 µs, +1.0% (2.0%) within noise |
+| Frame wall | +1.3% within noise | −2.1% within noise | +0.8% within noise |
+| Frame CPU encode | within noise | within noise | within noise |
+
+Every other metric is within noise in all three compares. The extra `i32` subtract and mask per vertex has no measurable cost. Correctness (lavapipe and CI): a screenshot moved by 1,000,064 chunks (32 M blocks) is byte-identical to the one at the origin.
+
 ## Cloud VM reference (2026-11-03)
 
 - **Machine:** Intel Xeon @ 2.30 GHz VM, 4 vCPUs, 16 GiB, Ubuntu 24.04, rustc 1.97.1, no RUSTFLAGS.
