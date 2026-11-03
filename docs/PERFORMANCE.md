@@ -79,6 +79,21 @@ Content is identical between flat and textured (same `mesh_hash` per scenario). 
 - Textured shading costs about 40–45 µs per frame at radius 16 and about 47 µs at radius 32 (computed from the table). The cost barely grows with 3.8× the quads, which points to a per-pixel cost at a fixed resolution rather than the per-vertex face lookup (inferred, not profiled).
 - `default` uses most of the 10% budget. The levers, if a later change needs the headroom: anisotropy 4 instead of 8, and dropping the texel snap (it costs ALU, not fetches). Both are quick A/B runs with `--shading textured` on both sides.
 
+### Revision 2 textures (clean art, PR #18), `default` (measured)
+
+- **Build:** commit `492c06e`, release, clean tree; texture hash `b9f7c95fe5a532a7` (revision 1: `0bcc42998c26331f`). Mesh hash `fab6872fe1853d8e`, texture memory 10.7 KiB, both unchanged.
+- **Command:** `vx bench --scenario default --shading flat|textured`, `vx bench-compare flat.json textured.json --allow-shading-change`; run 2 in reverse order (textured first).
+- **Raw files:** `benchmarks/textures/noah-msi-rtx2060/*-492c06e-run1/run2.*` (commit `25fc753` on the backlog thread's branch).
+
+| Run | Flat | Textured | Change | Noise band | Budget (≤ +10%) |
+|---|---|---|---|---|---|
+| 1, flat first | 503.9 µs | 557.1 µs | +10.6% | 7.8% | over by 0.6 points |
+| 2, textured first | 512.4 µs | 555.0 µs | +8.3% | 6.5% | met |
+
+Frame wall, frame CPU encode, generation, meshing and upload are within noise in both runs.
+
+Reading: the textured pass is 555–557 µs, the same as revision 1 (552.7 and 561.0 µs). The run-1 overshoot comes from a low flat run (503.9 µs, against 508.8–520.2 µs in the other four flat runs), not from the new art; the shader, fetch count and texture size did not change. Across all four `default` pairs the cost is +7.8% to +10.6%, mean +8.8% (computed), so revision 2 stays within budget on average but has no margin. Before any further texture or fragment work lands, buy headroom with the levers above (anisotropy 4, or no texel snap) and measure them as `textured` vs `textured`.
+
 ## Sprint S1 start baseline: `noah-msi-rtx2060` (2026-11-03)
 
 The reference every S1 gate compares against (`docs/SPRINTS.md` rule 1).
