@@ -119,6 +119,7 @@ These extend the measure-first rule in `CLAUDE.md` and `docs/BENCHMARKING.md` to
 - New bench metrics: time-to-fill-view, wasted-job share, upload ms per frame, largest free block after the flight.
 - Profile the dense-chunk mesher path with Tracy now that streaming feeds it (known issue in `docs/ROADMAP.md`).
 - Roadmap 18, ADR-0016: camera position as chunk + local offset, chunk origins uploaded relative to the camera chunk, view-projection without translation beyond the local offset. Moved here from S5 (2026-11-03) because streaming is the first system that lets the camera travel far, and every later pass (culling, LOD, shadows) should be written against camera-relative positions from the start. Gate: a `fly-fast` variant starting at block (1,000,000, y, 1,000,000) renders a screenshot identical to the same view at the origin with the world shifted, and frame metrics within noise of the origin run.
+- Carried over from S2 (2026-11-03): SIMD terrain noise (roadmap 13, ADR-0009). S2 met its generation gate without it (−51.8% / −56.0% at `default`, measured), but far-field LOD generation (ADR-0016) makes noise throughput matter again; do it together with the precision change below so `mesh_hash` is re-baselined once.
 - Terrain noise sampled from integer cell + fractional offset (or fastnoise-lite's `f64` feature, measured against f32 in gungraun), so terrain is not degraded far from the origin (ADR-0016).
 
 **Exit gates (`fly-fast`, radius 16, RTX 2060):**

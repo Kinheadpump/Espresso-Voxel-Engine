@@ -8,7 +8,6 @@ publish.workspace = true
 
 [features]
 tracy = ["profiling/profile-with-tracy"]
-chunk62 = ["vx-core/chunk62"]
 
 [[bin]]
 name = "vx"

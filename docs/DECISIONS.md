@@ -10,7 +10,7 @@ Both prior engines' cores (storage layout, neighbour handling, world index, mesh
 
 CPU crates stay free of wgpu/winit so benches compile in seconds and run headless. The render crate knows nothing about terrain generation. The app crate wires them together.
 
-## ADR-0003 32³ chunks, padded 34³ mesher input, u64 columns (Accepted, revisit with measurement)
+## ADR-0003 32³ chunks, padded 34³ mesher input, u64 columns (Accepted; measurement in ADR-0017)
 
 32³ keeps chunk-level culling granular and the padded column fits a `u64`. The alternative from the research is 62³ data padded to 64³ (cgerikj / TanTanDev), which halves per-chunk overhead (draws, cull work, upload count) at the cost of coarser culling and remeshing more on edits. `CHUNK_SIZE` is a single constant with `PADDED_SIZE ≤ 64` asserted, so the experiment is cheap. Decide with: mesh µs per voxel, draws visible, and frame time at the same view distance.
 
@@ -22,7 +22,7 @@ CPU crates stay free of wgpu/winit so benches compile in seconds and run headles
 
 Research (`docs/research/rust-tooling.md`): rayon has no priorities or cancellation. Plan: dedicated `ThreadPool` (cores − 1), main thread keeps a distance-sorted heap and submits at most ~2× worker count jobs per frame with `spawn_fifo`, results over crossbeam, stale results dropped by a per-slot generation counter. Replace only if profiling shows rayon overhead.
 
-## ADR-0006 Mesh only with real neighbours (Accepted)
+## ADR-0006 Mesh only with real neighbours (Accepted; 6-neighbour rule confirmed by ADR-0017)
 
 `gather_padded` returns `MissingNeighbour` instead of guessing. A chunk is meshed once all 6 face neighbours are resident; edits remesh the chunk and any neighbour whose border changed. This removes Lemon's `boundary_planes` cost (5–10× the mesh itself) and its bug class.
 
@@ -75,3 +75,13 @@ Decision:
 - **Far field:** LOD levels beyond the near rings are generated directly from noise at coarse spacing (never by downsampling level 0), and a horizon tier beyond the last voxel ring carries the silhouette to the far plane. Mechanism chosen in ADR-0011.
 Alternatives: f64 positions on the GPU (not portable in WGSL, slow where supported); periodic origin rebasing of absolute f32 positions (works, but every system must handle the rebase event; chunk + local makes it implicit); a bounded world (rejected by the goal).
 Re-check of S2 decisions under this goal: 32³ chunks hold (LOD keeps the chunk count per ring constant, and 32³ won generation, meshing and memory at `default` and `far`, measured, `docs/PERFORMANCE.md`); SSAO with the 6-neighbour rule holds (vertex AO would add ~67% quads at every LOD level, computed by the AO probe, and screen-space cost does not grow with reach).
+
+## ADR-0017 32³ chunks and the 6-neighbour rule confirmed; AO goes screen-space (Accepted, 2026-11-03)
+
+Context: S2 measured ADR-0003's open question and B-09's AO probe (`docs/PERFORMANCE.md`, sections "ADR-0003 chunk size, 32³ vs 62³" and "AO probe (B-09 part 1)").
+Decision: keep `CHUNK_SIZE = 32`; the 62³ prototype feature is removed. ADR-0006 keeps the 6 face-neighbour rule. Ambient occlusion is screen-space (SSAO, S8); vertex AO (B-09) is dropped.
+Decided by:
+- 62³ cut draws 9,492 → 2,859 but moved frame wall and GPU terrain pass within noise or slightly worse, and was slower on generation (149.6–157.9 → 197.9–203.6 ms) and meshing (58.9–61.5 → 69.1–69.8 ms) with 2.4× the voxel heap (16.1 → 38.1 MiB) at `default`; `far` was worse on every world metric (measured, `noah-msi-rtx2060`).
+- The AO-safe greedy merge adds +66.8% quads at `default` and +67.5% at `far` (computed, AO probe), far above B-09's ~30% threshold, and the 26-neighbour rule costs about 12 blocks of meshed reach at the streaming edge (computed).
+- Under ADR-0016 both hold: LOD keeps chunk counts per ring constant, and vertex AO would add its quad cost at every LOD level while SSAO cost does not grow with reach.
+Decided by Noah's delegation (2026-11-03) on the recommended option.

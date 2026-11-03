@@ -8,11 +8,7 @@ pub use coords::{ChunkPos, LocalPos};
 pub use direction::{Axis, FaceDir};
 pub use textures::{BlockFaces, TextureLayer, block_face_table};
 
-#[cfg(not(feature = "chunk62"))]
 pub const CHUNK_SIZE: usize = 32;
-/// ADR-0003 prototype: 62³ data padded to 64³, so a padded column fills a `u64` exactly.
-#[cfg(feature = "chunk62")]
-pub const CHUNK_SIZE: usize = 62;
 pub const CHUNK_SIZE_I32: i32 = CHUNK_SIZE as i32;
 pub const CHUNK_AREA: usize = CHUNK_SIZE * CHUNK_SIZE;
 pub const CHUNK_VOLUME: usize = CHUNK_AREA * CHUNK_SIZE;
