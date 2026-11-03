@@ -109,6 +109,74 @@ Findings:
 - Frame CPU encode has a rare spike: pooled max 1.48–1.73 ms against p99 0.14–0.33 ms in every scenario (measured). The max sits in `submit` (1.39–1.65 ms), not in `record`. The windowed bench (roadmap 2) should show whether such spikes reach presentation.
 - `small` frame numbers are too noisy on this laptop for verdicts (54–85% spread).
 
+## ADR-0003 chunk size, 32³ vs 62³: `noah-msi-rtx2060` (2026-11-03)
+
+- **Build:** `a502153d25b6` (both sizes from one commit; 62³ via `--features chunk62`), release, clean worktree, `git_dirty=false`.
+- **Equal reach:** scenarios are defined in blocks. `default` = 512 blocks (radius 16 × 32 or 8 × 62; meshed width 1,056 vs 1,054 blocks), `far` = 1,024 blocks (radius 32 vs 17; 2,080 vs 2,170 blocks). World height is 160 blocks (5 × 32 vs 3 × 62 = 186).
+- **Runs:** `default` twice per size (interleaved), `far` once, windowed `default` once at 3440×1440 `Immediate`.
+- **Raw files:** `benchmarks/baselines/noah-msi-rtx2060/adr-0003-chunk-size/`.
+
+### `default` (measured; two runs each)
+
+| Metric | 32³ | 62³ |
+|---|---|---|
+| Chunks generated / meshed | 6,125 / 2,826 | 1,083 / 567 |
+| Quads / draws | 986,380 / 9,492 | 969,912 / 2,859 |
+| World generation | 149.6 / 157.9 ms | 197.9 / 203.6 ms |
+| Generation per generated voxel (computed) | 0.75–0.79 ns | 0.77–0.79 ns |
+| Meshing | 58.9 / 61.5 ms | 69.1 / 69.8 ms |
+| Meshing per meshed voxel (computed) | 0.64–0.66 ns | 0.51–0.52 ns |
+| Frame CPU encode | 152.2 / 153.3 µs | 145.3 / 143.8 µs |
+| Frame GPU terrain pass | 504.4 / 507.9 µs | 512.2 / 513.7 µs |
+| Frame wall | 945.4 / 942.8 µs | 952.2 / 944.0 µs |
+| Windowed frame interval (pacing p99/p50) | 907.5 µs (1.65) | 922.2 µs (1.72) |
+| Voxel heap | 16.1 MiB | 38.1 MiB |
+| Peak RSS | 172–178 MiB | 170–175 MiB |
+| Pixel-visible quads (perfect chunk occlusion) | 183,421 (18.6%) | 219,675 (22.6%) |
+
+### `far` (measured; one run each)
+
+| Metric | 32³ (radius 32) | 62³ (radius 17) |
+|---|---|---|
+| Quads / draws | 3,792,695 / 36,275 | 4,063,557 / 11,993 |
+| World generation | 597.4 ms (0.81 ns/voxel) | 811.0 ms (0.83 ns/voxel) |
+| Meshing | 245.3 ms (0.69 ns/voxel) | 301.7 ms (0.53 ns/voxel) |
+| Frame GPU terrain pass | 1,768.8 µs | 1,891.7 µs |
+| Frame wall | 2,209.2 µs | 2,326.5 µs |
+| Voxel heap / peak RSS | 58.6 / 219 MiB | 143.2 / 316 MiB |
+| Pixel-visible quads | 484,225 (12.8%) | 657,527 (16.2%) |
+
+Instruction counts (gungraun, cloud container, one surface chunk at sea level, computed per voxel): mesher 20.1 vs 13.8 instructions per voxel, generation 73.5 vs 59.3, gather 17.4 vs 14.0, palette decode 10.3 vs 10.3.
+
+Findings:
+
+- **Frame time does not move.** Encode, GPU pass, wall and windowed interval at `default` are within run-to-run noise of each other. 3.3× fewer draws buy nothing since ADR-0015 removed the per-draw CPU cost (measured: encode 143–153 µs for both).
+- **The mesher is ~20% cheaper per voxel at 62³** (bench and instruction counts agree), but 62³ chunks cover more volume at the same reach (+29% generated voxels at `default`, +33% at `far`, from coarser region edges and a 186-block world), so total meshing is 15–23% slower and generation 25–36% slower (measured).
+- **Culling gets coarser.** A perfect chunk-granular occlusion culler keeps 20% more quads at 62³ on `default` (computed from the ladder); frustum+facing keeps 26.8% vs 24.5%.
+- **Memory grows.** 62³ chunks are rarely uniform, so the voxel heap is 2.4× larger (38.1 vs 16.1 MiB at `default`, 143 vs 59 MiB at `far`).
+- An edit remeshes 238,328 voxels instead of 32,768 (7.3×, computed).
+
+Recommendation: keep 32³ (ADR-0003 Accepted with these numbers; 62³ rejected). Revisit only if GPU culling (S4) turns out bound by draw or chunk count.
+
+## AO probe (B-09 part 1, 2026-11-03)
+
+`cargo run --release -p vx-instr --example ao_probe -- <view_blocks>`: plain greedy vs AO-safe greedy (merge only faces whose four 0fps corner AO values match) over the scenario region, plus the meshable area under the 6- vs 26-neighbour rule for a circular load radius. Measured in the cloud container (counts are deterministic).
+
+| Region | Plain greedy quads | AO-safe quads | Increase |
+|---|---|---|---|
+| 32³, 512 blocks (`default`) | 986,380 | 1,645,740 | +66.8% |
+| 32³, 1,024 blocks (`far`) | 3,792,700 | 6,352,117 | +67.5% |
+| 62³, 512 blocks | 969,912 | 1,633,738 | +68.4% |
+
+The plain count matches the binary mesher on `default` exactly and on `far` to 5 quads in 3.8 M (0.0001%).
+
+| Load radius | Meshable columns, 6-rule | 26-rule | Meshed reach lost |
+|---|---|---|---|
+| 16 chunks (32³) | 709 | 673 (−5.1%) | 12.4 blocks |
+| 32 chunks (32³) | 3,029 | 2,957 (−2.4%) | 11.9 blocks |
+
+Findings: AO-safe merging adds +67% quads, far above B-09's ~30% threshold (estimate). The rolling heightmap makes AO vary along almost every slope, so faces stop merging. The 26-neighbour rule costs only ~12 blocks of meshed reach, but it buys nothing without vertex AO. Recommendation: SSAO for ambient occlusion (S8), ADR-0006 stays at 6 neighbours, and B-03 keeps the 6-slab gather.
+
 ## Sprint S1 exit gate and windowed bench: `noah-msi-rtx2060` (2026-11-03)
 
 - **Build:** `main` at `fbdc3d99a264` (after PRs #13–#15: memory reporting, Tracy zones with the feature off, windowed mode), release, clean detached worktree, `git_dirty=false` in every report.
