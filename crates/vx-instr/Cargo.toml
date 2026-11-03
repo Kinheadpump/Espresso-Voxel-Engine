@@ -14,6 +14,8 @@ vx-mesh.workspace = true
 
 [dev-dependencies]
 gungraun.workspace = true
+glam.workspace = true
+rayon.workspace = true
 
 [[bench]]
 name = "instructions"

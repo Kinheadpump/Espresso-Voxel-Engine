@@ -1,0 +1,267 @@
+{
+  "schema": 1,
+  "unix_time": 1793738285,
+  "build": {
+    "git_commit": "6b20c4ec695e",
+    "git_dirty": "false",
+    "profile": "release",
+    "debug_assertions": false,
+    "rustc": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+    "rustflags": "none"
+  },
+  "system": {
+    "os": "Windows 11 Home",
+    "arch": "x86_64",
+    "cpu": "Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz",
+    "physical_cores": 6,
+    "logical_cores": 12,
+    "total_memory_mib": 16225
+  },
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 2060",
+    "backend": "Vulkan",
+    "device_type": "DiscreteGpu",
+    "driver": "NVIDIA",
+    "driver_info": "616.92",
+    "tier": "GpuDrivenWithCount",
+    "timestamps": true
+  },
+  "scenario": {
+    "name": "default",
+    "seed": 1337,
+    "view_radius": 16,
+    "vertical_chunks": 5,
+    "threads": 12,
+    "width": 1920,
+    "height": 1080,
+    "warmup_frames": 120,
+    "measured_frames": 600,
+    "repeats": 5,
+    "frame_sync": "offscreen, CPU waits for GPU completion every frame"
+  },
+  "content": {
+    "chunks_generated": 6125,
+    "chunks_meshed": 2826,
+    "quads": 986380,
+    "mesh_hash": "fab6872fe1853d8e",
+    "voxel_heap_bytes": 16843696,
+    "geometry_buffer_bytes": 8088128,
+    "draws": 9492,
+    "shading": "flat",
+    "texture_bytes": 0,
+    "texture_hash": "",
+    "indirect_validation": false
+  },
+  "results": {
+    "world_generation_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        157.12709999999998,
+        152.2056,
+        152.362,
+        152.28539999999998,
+        154.3532
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 152.2056,
+        "p50": 152.362,
+        "p90": 156.01754,
+        "p99": 157.016144,
+        "max": 157.12709999999998,
+        "mean": 153.66666,
+        "stddev": 1.907390646511612
+      }
+    },
+    "meshing_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        59.145900000000005,
+        59.5727,
+        59.1015,
+        59.835,
+        59.3859
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 59.1015,
+        "p50": 59.3859,
+        "p90": 59.73008,
+        "p99": 59.824508,
+        "max": 59.835,
+        "mean": 59.4082,
+        "stddev": 0.27297690744822967
+      }
+    },
+    "upload_ms": {
+      "unit": "ms",
+      "per_repeat_p50": [
+        7.494,
+        7.2455,
+        7.2566999999999995,
+        7.23,
+        7.3821
+      ],
+      "pooled": {
+        "count": 5,
+        "min": 7.23,
+        "p50": 7.2566999999999995,
+        "p90": 7.44924,
+        "p99": 7.489523999999999,
+        "max": 7.494,
+        "mean": 7.32166,
+        "stddev": 0.10176027908766756
+      }
+    },
+    "frame_cpu_encode_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        143.64999999999998,
+        143.64999999999998,
+        148.35000000000002,
+        164.1,
+        162.20000000000002
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 62.5,
+        "p50": 146.75,
+        "p90": 176.31,
+        "p99": 334.04899999999884,
+        "max": 3510.3,
+        "mean": 156.8693999999999,
+        "stddev": 84.38579365217034
+      }
+    },
+    "frame_cpu_record_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        60.5,
+        60.5,
+        61.60000000000001,
+        74.0,
+        74.2
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 25.0,
+        "p50": 61.3,
+        "p90": 76.3,
+        "p99": 147.90899999999976,
+        "max": 263.1,
+        "mean": 67.05769999999997,
+        "stddev": 18.2345392239563
+      }
+    },
+    "frame_cpu_submit_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        65.7,
+        65.6,
+        66.9,
+        68.89999999999999,
+        67.8
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 31.5,
+        "p50": 66.60000000000001,
+        "p90": 73.5,
+        "p99": 159.61499999999964,
+        "max": 3471.5,
+        "mean": 70.52096666666671,
+        "stddev": 79.40937285399977
+      }
+    },
+    "frame_gpu_terrain_pass_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        512.0,
+        504.496,
+        503.808,
+        503.36,
+        536.576
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 483.93600000000004,
+        "p50": 507.008,
+        "p90": 541.1264,
+        "p99": 993.2902399999998,
+        "max": 1005.44,
+        "mean": 521.0768426666664,
+        "stddev": 66.56652057110423
+      }
+    },
+    "frame_wall_us": {
+      "unit": "us",
+      "per_repeat_p50": [
+        932.5,
+        926.95,
+        932.1,
+        943.0999999999999,
+        990.8000000000001
+      ],
+      "pooled": {
+        "count": 3000,
+        "min": 695.3000000000001,
+        "p50": 935.55,
+        "p90": 1032.81,
+        "p99": 1429.731999999999,
+        "max": 4729.299999999999,
+        "mean": 946.7428000000031,
+        "stddev": 122.85369000628349
+      }
+    },
+    "process_resident_mib": 90.1171875,
+    "process_peak_resident_mib": 177.6796875
+  },
+  "visibility": {
+    "sampled_frames": 24,
+    "ladder": [
+      {
+        "stage": "resident",
+        "chunks": 2826.0,
+        "draws": 9492.0,
+        "quads": 986380.0
+      },
+      {
+        "stage": "frustum",
+        "chunks": 1021.125,
+        "draws": 3401.9583333333335,
+        "quads": 352755.25
+      },
+      {
+        "stage": "frustum+facing",
+        "chunks": 640.2083333333334,
+        "draws": 1851.0416666666667,
+        "quads": 242105.33333333334
+      },
+      {
+        "stage": "pixel-visible",
+        "chunks": 435.1666666666667,
+        "draws": 1296.375,
+        "quads": 183421.125
+      }
+    ]
+  },
+  "gpu_memory": {
+    "allocated_mib": 33.023895263671875,
+    "reserved_mib": 256.0,
+    "allocated_mib_by_label": {
+      "(wgpu internal) default external texture params buffer": 0.000244140625,
+      "(wgpu internal) zero init buffer": 0.5,
+      "block_faces": 0.000030517578125,
+      "block_textures": 0.024017333984375,
+      "camera_uniform": 0.0001220703125,
+      "chunk_origins": 0.043121337890625,
+      "depth": 8.4375,
+      "offscreen_color": 8.4383544921875,
+      "terrain_indirect": 0.14483642578125,
+      "terrain_quads": 7.525482177734375,
+      "texture_readback": 7.91015625,
+      "timestamp_readback": 0.0000152587890625,
+      "timestamp_resolve": 0.0000152587890625
+    }
+  }
+}

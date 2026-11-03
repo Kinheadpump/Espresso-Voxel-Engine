@@ -10,7 +10,7 @@ Both prior engines' cores (storage layout, neighbour handling, world index, mesh
 
 CPU crates stay free of wgpu/winit so benches compile in seconds and run headless. The render crate knows nothing about terrain generation. The app crate wires them together.
 
-## ADR-0003 32³ chunks, padded 34³ mesher input, u64 columns (Accepted, revisit with measurement)
+## ADR-0003 32³ chunks, padded 34³ mesher input, u64 columns (Accepted; measurement in ADR-0017)
 
 32³ keeps chunk-level culling granular and the padded column fits a `u64`. The alternative from the research is 62³ data padded to 64³ (cgerikj / TanTanDev), which halves per-chunk overhead (draws, cull work, upload count) at the cost of coarser culling and remeshing more on edits. `CHUNK_SIZE` is a single constant with `PADDED_SIZE ≤ 64` asserted, so the experiment is cheap. Decide with: mesh µs per voxel, draws visible, and frame time at the same view distance.
 
@@ -22,7 +22,7 @@ CPU crates stay free of wgpu/winit so benches compile in seconds and run headles
 
 Research (`docs/research/rust-tooling.md`): rayon has no priorities or cancellation. Plan: dedicated `ThreadPool` (cores − 1), main thread keeps a distance-sorted heap and submits at most ~2× worker count jobs per frame with `spawn_fifo`, results over crossbeam, stale results dropped by a per-slot generation counter. Replace only if profiling shows rayon overhead.
 
-## ADR-0006 Mesh only with real neighbours (Accepted)
+## ADR-0006 Mesh only with real neighbours (Accepted; 6-neighbour rule confirmed by ADR-0017)
 
 `gather_padded` returns `MissingNeighbour` instead of guessing. A chunk is meshed once all 6 face neighbours are resident; edits remesh the chunk and any neighbour whose border changed. This removes Lemon's `boundary_planes` cost (5–10× the mesh itself) and its bug class.
 
@@ -44,7 +44,7 @@ Port Lemon's compute cull (frustum + per-direction back-face rejection + Hi-Z), 
 
 ## ADR-0011 Far terrain / LOD (Proposed, research)
 
-Candidates: meshed LOD rings with downsampled chunks (Distant Horizons style), or ray-marching a coarse brick map for the far field. Aokana (2025) reports 10¹⁰ voxels in ~6 ms but is read-only. Decide after the near field is GPU-driven and measured, with a prototype of each at the same view distance.
+Candidates: meshed LOD rings with downsampled chunks (Distant Horizons style), or ray-marching a coarse brick map for the far field. Scope added 2026-11-03 by ADR-0016: far rings are generated directly at coarse spacing, and a horizon tier (heightmap clipmap or impostors) beyond the last ring is part of the comparison. Aokana (2025) reports 10¹⁰ voxels in ~6 ms but is read-only. Decide after the near field is GPU-driven and measured, with a prototype of each at the same view distance.
 
 ## ADR-0012 Benchmark methodology (Accepted, 2026-11-03)
 
@@ -64,3 +64,24 @@ Context: wgpu 30 keeps `InstanceFlags::VALIDATION_INDIRECT_CALL` on in release b
 Decision: release builds create the instance with the flag off (`IndirectValidation::for_build`); debug builds keep it on. With it off, D3D12 is excluded from the backends, because wgpu then drops `first_vertex`/`first_instance` from the vertex builtins on D3D12 and the terrain shader depends on both. `TerrainRenderer::upload_static` builds every indirect argument in range by construction and checks it with a `debug_assert`. `vx bench` and `vx --screenshot` take `--indirect-validation on|off` to measure the switch.
 Alternatives: keep validation (costs 0.28 ms of CPU per frame at `default` and 1.09 ms at `far`, computed from measured record medians); emit fewer draws first (B-06 does that too, but the per-draw cost would remain); keep D3D12 with validation on (possible later via a per-backend instance if a Windows machine lacks Vulkan).
 Decided by (measured, `noah-msi-rtx2060`, `docs/PERFORMANCE.md`): frame CPU record −81% at `default` (two runs) and −94% at `far`, FASTER; GPU terrain pass within noise everywhere; screenshots byte-identical with the flag on and off on the RTX 2060 (Vulkan) and lavapipe.
+
+## ADR-0016 Unbounded world: coordinate ranges and precision (Accepted, 2026-11-03)
+
+Context: Noah set the top-level goal of an infinite world with nearly infinite render distance (2026-11-03). Today the terrain shader builds absolute f32 world positions (`chunk_origin + local`) and the camera is an absolute f32 `Vec3`. f32 spacing is 1/128 block at 65,536 blocks and 1/8 block at 1,048,576 blocks (computed), so vertices and the camera visibly jitter long before the world ends. Terrain noise takes block coordinates as f32 and multiplies by the frequency, which loses resolution between neighbouring blocks around a million blocks out (estimate).
+Decision:
+- **Block and chunk coordinates stay integer.** `i32` blocks give ±2.1 × 10⁹ blocks (computed). `ChunkPos::packed_key` uses 21 bits per axis, ±1,048,576 chunks = ±33.5 M blocks at 32³ (computed); that is the playable range until a key change is needed, and the world is generated, streamed and stored without any other bound. `ChunkWindow` addresses by `rem_euclid` and is unbounded already.
+- **Camera-relative rendering** (roadmap 18, moved to S3): the camera is a chunk position plus an f32 local offset; chunk origins go to the GPU relative to the camera chunk; the view matrix only translates by the local offset. f32 then only ever holds distances within the view, never absolute positions.
+- **Noise precision:** sample noise from the integer cell plus an f32 fraction (or fastnoise-lite's `f64` feature, chosen by gungraun instruction counts), so generation is identical in quality at any distance.
+- **Far field:** LOD levels beyond the near rings are generated directly from noise at coarse spacing (never by downsampling level 0), and a horizon tier beyond the last voxel ring carries the silhouette to the far plane. Mechanism chosen in ADR-0011.
+Alternatives: f64 positions on the GPU (not portable in WGSL, slow where supported); periodic origin rebasing of absolute f32 positions (works, but every system must handle the rebase event; chunk + local makes it implicit); a bounded world (rejected by the goal).
+Re-check of S2 decisions under this goal: 32³ chunks hold (LOD keeps the chunk count per ring constant, and 32³ won generation, meshing and memory at `default` and `far`, measured, `docs/PERFORMANCE.md`); SSAO with the 6-neighbour rule holds (vertex AO would add ~67% quads at every LOD level, computed by the AO probe, and screen-space cost does not grow with reach).
+
+## ADR-0017 32³ chunks and the 6-neighbour rule confirmed; AO goes screen-space (Accepted, 2026-11-03)
+
+Context: S2 measured ADR-0003's open question and B-09's AO probe (`docs/PERFORMANCE.md`, sections "ADR-0003 chunk size, 32³ vs 62³" and "AO probe (B-09 part 1)").
+Decision: keep `CHUNK_SIZE = 32`; the 62³ prototype feature is removed. ADR-0006 keeps the 6 face-neighbour rule. Ambient occlusion is screen-space (SSAO, S8); vertex AO (B-09) is dropped.
+Decided by:
+- 62³ cut draws 9,492 → 2,859 but moved frame wall and GPU terrain pass within noise or slightly worse, and was slower on generation (149.6–157.9 → 197.9–203.6 ms) and meshing (58.9–61.5 → 69.1–69.8 ms) with 2.4× the voxel heap (16.1 → 38.1 MiB) at `default`; `far` was worse on every world metric (measured, `noah-msi-rtx2060`).
+- The AO-safe greedy merge adds +66.8% quads at `default` and +67.5% at `far` (computed, AO probe), far above B-09's ~30% threshold, and the 26-neighbour rule costs about 12 blocks of meshed reach at the streaming edge (computed).
+- Under ADR-0016 both hold: LOD keeps chunk counts per ring constant, and vertex AO would add its quad cost at every LOD level while SSAO cost does not grow with reach.
+Decided by Noah's delegation (2026-11-03) on the recommended option.

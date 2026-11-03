@@ -33,6 +33,10 @@ pub struct BinaryGreedyMesher {
 }
 
 impl Default for BinaryGreedyMesher {
+    #[allow(
+        clippy::large_stack_arrays,
+        reason = "one 32 KiB template array per mesher at 64³ padding, cloned into the heap once"
+    )]
     fn default() -> Self {
         Self {
             opaque_columns: vec![[0; COLUMNS_PER_AXIS]; 3]

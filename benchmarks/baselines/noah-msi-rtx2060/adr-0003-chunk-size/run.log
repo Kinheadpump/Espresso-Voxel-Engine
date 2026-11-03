@@ -1,0 +1,320 @@
+===== ..\t32\release\vx.exe bench --scenario default --out ..\out\c32-default-run1.json
+[2026-11-03T20:15:40Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:15:41Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:15:41Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T20:15:42Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:15:45Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 90 MiB
+metric                             center        p50        p99        max   spread
+world generation                    149.6      149.6      152.5      152.6     2.5%  [ms]
+meshing                              58.9       58.9       61.4       61.4     5.2%  [ms]
+upload                                7.4        7.4        8.1        8.1    10.2%  [ms]
+frame CPU encode                    152.2      158.4      330.3     1995.3    13.6%  [us]
+  of which record                    63.2       67.9      148.2     1783.3    22.3%  [us]
+  of which submit                    65.4       66.0      140.4     1692.5     6.3%  [us]
+frame GPU terrain pass              504.4      508.8     1001.7     1014.0     6.5%  [us]
+frame wall (CPU+GPU, synced)        945.4      943.3     1452.1     2848.6     8.7%  [us]
+
+memory: peak RSS 178 MiB | GPU allocated 33.0 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.04 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.14 MiB
+  terrain_quads                    7.53 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9492.0       986380   100.0%
+frustum              1021.1     3402.0       352755    35.8%
+frustum+facing        640.2     1851.0       242105    24.5%
+pixel-visible         435.2     1296.4       183421    18.6%
+
+wrote ..\out\c32-default-run1.json
+exit: 0
+===== ..\t62\release\vx.exe bench --scenario default --out ..\out\c62-default-run1.json
+[2026-11-03T20:15:47Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:15:47Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:15:47Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 8
+[2026-11-03T20:15:49Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:15:52Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 1083 chunks generated, 567 meshed, 969912 quads, 2859 draws, hash 0cfe77862dd38585 | shading flat (0.0 KiB textures) | voxel heap 38.1 MiB | geometry buffers 7.5 MiB | RSS 90 MiB
+metric                             center        p50        p99        max   spread
+world generation                    197.9      197.9      211.7      211.8     8.9%  [ms]
+meshing                              69.1       69.1       73.1       73.2     7.7%  [ms]
+upload                                7.7        7.7        8.0        8.0     6.1%  [ms]
+frame CPU encode                    145.3      160.6      323.4     1563.2    14.0%  [us]
+  of which record                    62.3       71.7      157.4      695.9    22.3%  [us]
+  of which submit                    65.9       66.9      136.3     1466.3     5.9%  [us]
+frame GPU terrain pass              512.2      517.5     1016.0     1042.0     3.9%  [us]
+frame wall (CPU+GPU, synced)        952.2      954.4     1452.0     2030.2    11.2%  [us]
+
+memory: peak RSS 175 MiB | GPU allocated 32.8 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.01 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.04 MiB
+  terrain_quads                    7.40 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident              567.0     2859.0       969912   100.0%
+frustum               219.2     1105.4       374300    38.6%
+frustum+facing        204.5      619.0       260315    26.8%
+pixel-visible         154.5      477.2       219675    22.6%
+
+wrote ..\out\c62-default-run1.json
+exit: 0
+===== ..\t32\release\vx.exe bench --scenario default --out ..\out\c32-default-run2.json
+[2026-11-03T20:15:54Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:15:54Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:15:54Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T20:15:55Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:15:59Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 83 MiB
+metric                             center        p50        p99        max   spread
+world generation                    157.9      157.9      161.1      161.1     3.3%  [ms]
+meshing                              61.5       61.5       64.0       64.0     5.3%  [ms]
+upload                                7.3        7.3        7.6        7.6     4.6%  [ms]
+frame CPU encode                    153.3      160.6      305.8     1645.9    12.8%  [us]
+  of which record                    64.2       72.2      143.0      358.4    21.2%  [us]
+  of which submit                    66.4       66.7      141.4     1550.7     5.3%  [us]
+frame GPU terrain pass              507.9      513.8      997.0     1009.7     7.0%  [us]
+frame wall (CPU+GPU, synced)        942.8      945.2     1408.1     1682.1    10.1%  [us]
+
+memory: peak RSS 172 MiB | GPU allocated 33.0 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.04 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.14 MiB
+  terrain_quads                    7.53 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2826.0     9492.0       986380   100.0%
+frustum              1021.1     3402.0       352755    35.8%
+frustum+facing        640.2     1851.0       242105    24.5%
+pixel-visible         435.2     1296.4       183421    18.6%
+
+wrote ..\out\c32-default-run2.json
+exit: 0
+===== ..\t62\release\vx.exe bench --scenario default --out ..\out\c62-default-run2.json
+[2026-11-03T20:16:00Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:16:00Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:16:00Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 8
+[2026-11-03T20:16:02Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:16:05Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 1083 chunks generated, 567 meshed, 969912 quads, 2859 draws, hash 0cfe77862dd38585 | shading flat (0.0 KiB textures) | voxel heap 38.1 MiB | geometry buffers 7.5 MiB | RSS 83 MiB
+metric                             center        p50        p99        max   spread
+world generation                    203.6      203.6      204.2      204.2     2.5%  [ms]
+meshing                              69.8       69.8       71.0       71.0     2.5%  [ms]
+upload                                7.6        7.6        8.2        8.2     9.9%  [ms]
+frame CPU encode                    143.8      152.1      333.9     1589.0    15.2%  [us]
+  of which record                    59.9       61.3      143.3      503.8    25.7%  [us]
+  of which submit                    66.2       67.5      151.9     1500.3     6.5%  [us]
+frame GPU terrain pass              513.7      516.9      827.6      848.9     3.8%  [us]
+frame wall (CPU+GPU, synced)        944.0      949.0     1261.9     1695.8     9.6%  [us]
+
+memory: peak RSS 170 MiB | GPU allocated 32.8 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.01 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.04 MiB
+  terrain_quads                    7.40 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident              567.0     2859.0       969912   100.0%
+frustum               219.2     1105.4       374300    38.6%
+frustum+facing        204.5      619.0       260315    26.8%
+pixel-visible         154.5      477.2       219675    22.6%
+
+wrote ..\out\c62-default-run2.json
+exit: 0
+===== ..\t32\release\vx.exe bench --scenario far --out ..\out\c32-far.json
+[2026-11-03T20:16:06Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:16:07Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:16:07Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 32
+[2026-11-03T20:16:12Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:16:20Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario far | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 22445 chunks generated, 10858 meshed, 3792695 quads, 36275 draws, hash 4229b10348a4dc42 | shading flat (0.0 KiB textures) | voxel heap 58.6 MiB | geometry buffers 29.7 MiB | RSS 123 MiB
+metric                             center        p50        p99        max   spread
+world generation                    597.4      597.4      602.3      602.4     2.4%  [ms]
+meshing                             245.3      245.3      246.4      246.4     1.9%  [ms]
+upload                               46.3       46.3       48.2       48.3     5.0%  [ms]
+frame CPU encode                    162.4      162.8      302.5     1482.0    12.9%  [us]
+  of which record                    74.4       74.4      137.3      772.1    18.3%  [us]
+  of which submit                    67.2       67.2      134.3     1386.2     6.0%  [us]
+frame GPU terrain pass             1768.8     1769.1     1848.4     1876.0     0.7%  [us]
+frame wall (CPU+GPU, synced)       2209.2     2208.1     2383.2     3155.2     2.4%  [us]
+
+memory: peak RSS 219 MiB | GPU allocated 55.0 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.17 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.55 MiB
+  terrain_quads                   28.94 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident            10858.0    36275.0      3792695   100.0%
+frustum              3656.0    12194.0      1274671    33.6%
+frustum+facing       2306.5     6589.0       866093    22.8%
+pixel-visible        1087.4     3235.0       484225    12.8%
+
+wrote ..\out\c32-far.json
+exit: 0
+===== ..\t62\release\vx.exe bench --scenario far --out ..\out\c62-far.json
+[2026-11-03T20:16:22Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:16:22Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:16:22Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 17
+[2026-11-03T20:16:29Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 1920x1080
+[2026-11-03T20:16:38Z INFO  vx::bench] visibility: culling ladder over 24 path frames
+scenario far | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 4107 chunks generated, 2391 meshed, 4063557 quads, 11993 draws, hash 60f017a1a9a96560 | shading flat (0.0 KiB textures) | voxel heap 143.2 MiB | geometry buffers 31.2 MiB | RSS 123 MiB
+metric                             center        p50        p99        max   spread
+world generation                    811.0      811.0      840.6      841.2     6.3%  [ms]
+meshing                             301.7      301.7      311.2      311.5     6.3%  [ms]
+upload                               46.5       46.5       47.2       47.2     2.2%  [ms]
+frame CPU encode                    160.8      161.6      296.2     1512.8    12.8%  [us]
+  of which record                    72.3       72.4      144.7      296.3    18.1%  [us]
+  of which submit                    67.9       68.2      138.5     1419.2     5.9%  [us]
+frame GPU terrain pass             1891.7     1890.3     1970.2     2008.0     1.1%  [us]
+frame wall (CPU+GPU, synced)       2326.5     2326.7     2516.1     3220.4     2.6%  [us]
+
+memory: peak RSS 316 MiB | GPU allocated 56.5 MiB, reserved 256.0 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.04 MiB
+  depth                            8.44 MiB
+  offscreen_color                  8.44 MiB
+  terrain_indirect                 0.18 MiB
+  terrain_quads                   31.00 MiB
+  texture_readback                 7.91 MiB
+  timestamp_readback               0.00 MiB
+  timestamp_resolve                0.00 MiB
+
+culling ladder (mean of 24 path frames, if culling stopped at each stage)
+stage                chunks      draws        quads  quads %
+resident             2391.0    11993.0      4063557   100.0%
+frustum               831.0     4167.6      1411572    34.7%
+frustum+facing        770.0     2296.0       967745    23.8%
+pixel-visible         426.5     1303.2       657527    16.2%
+
+wrote ..\out\c62-far.json
+exit: 0
+===== ..\t32\release\vx.exe bench --scenario default --windowed --out ..\out\c32-windowed.json
+[2026-11-03T20:16:46Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:16:46Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:16:46Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 16
+[2026-11-03T20:16:48Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 3440x1440
+[2026-11-03T20:16:48Z INFO  vx::bench::windowed] present mode Immediate
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 6125 chunks generated, 2826 meshed, 986380 quads, 9492 draws, hash fab6872fe1853d8e | shading flat (0.0 KiB textures) | voxel heap 16.1 MiB | geometry buffers 7.7 MiB | RSS 93 MiB
+metric                             center        p50        p99        max   spread
+world generation                    186.2      186.2      203.8      204.1    12.8%  [ms]
+meshing                              78.9       78.9       86.7       86.9    20.9%  [ms]
+upload                                8.7        8.7       10.8       10.9    29.2%  [ms]
+frame CPU encode                    401.9      399.5      706.1    60670.8    38.5%  [us]
+  of which record                    58.3       57.9      128.0      344.2    48.2%  [us]
+  of which submit                   317.3      315.7      582.9    60609.3    36.0%  [us]
+frame GPU terrain pass                n/a
+frame interval (present)            907.5      906.6     1492.1    61894.8     1.7%  [us]
+
+frame pacing: p50 906.6 us, p99 1492.1 us, max 61894.8 us, stddev 1124.6 us, p99/p50 1.65
+
+memory: peak RSS 135 MiB | GPU allocated 28.4 MiB, reserved 192.0 MiB
+  (wgpu internal) Staging          0.00 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.04 MiB
+  depth                           20.16 MiB
+  terrain_indirect                 0.14 MiB
+  terrain_quads                    7.53 MiB
+
+wrote ..\out\c32-windowed.json
+exit: 0
+===== ..\t62\release\vx.exe bench --scenario default --windowed --out ..\out\c62-windowed.json
+[2026-11-03T20:16:52Z INFO  wgpu_hal::vulkan::adapter] Found 6 cooperative matrix configurations supported by wgpu
+[2026-11-03T20:16:52Z INFO  vx_render::gpu] adapter: NVIDIA GeForce RTX 2060 (Vulkan, DiscreteGpu)
+[2026-11-03T20:16:53Z INFO  vx::bench] world: 1 warmup + 5 repeats of generate + mesh at radius 8
+[2026-11-03T20:16:54Z INFO  vx::bench] frames: 5 repeats of 120 warmup + 600 measured at 3440x1440
+[2026-11-03T20:16:54Z INFO  vx::bench::windowed] present mode Immediate
+scenario default | commit a502153d25b6 | release | Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz (6 cores) | NVIDIA GeForce RTX 2060 Vulkan 616.92
+content: 1083 chunks generated, 567 meshed, 969912 quads, 2859 draws, hash 0cfe77862dd38585 | shading flat (0.0 KiB textures) | voxel heap 38.1 MiB | geometry buffers 7.5 MiB | RSS 93 MiB
+metric                             center        p50        p99        max   spread
+world generation                    220.7      220.7      222.2      222.3     1.3%  [ms]
+meshing                              76.5       76.5       78.1       78.1     4.2%  [ms]
+upload                                8.3        8.3        8.9        8.9    14.2%  [ms]
+frame CPU encode                    405.8      405.6      692.6     1570.9     7.8%  [us]
+  of which record                    56.3       56.6      143.4      290.7    19.5%  [us]
+  of which submit                   322.7      322.0      545.1     1480.7     4.4%  [us]
+frame GPU terrain pass                n/a
+frame interval (present)            922.2      921.0     1587.0     2791.1     0.4%  [us]
+
+frame pacing: p50 921.0 us, p99 1587.0 us, max 2791.1 us, stddev 196.6 us, p99/p50 1.72
+
+memory: peak RSS 154 MiB | GPU allocated 28.1 MiB, reserved 192.0 MiB
+  (wgpu internal) Staging          0.00 MiB
+  (wgpu internal) default external texture params buffer     0.00 MiB
+  (wgpu internal) zero init buffer     0.50 MiB
+  block_faces                      0.00 MiB
+  block_textures                   0.02 MiB
+  camera_uniform                   0.00 MiB
+  chunk_origins                    0.01 MiB
+  depth                           20.16 MiB
+  terrain_indirect                 0.04 MiB
+  terrain_quads                    7.40 MiB
+
+wrote ..\out\c62-windowed.json
+exit: 0

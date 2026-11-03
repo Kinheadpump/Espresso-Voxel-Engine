@@ -30,21 +30,12 @@ fn palette_decode((voxels, mut dense): (ChunkVoxels, Box<DenseChunk>)) -> Box<De
 }
 
 #[library_benchmark]
-#[bench::surface((vx_instr::surface_neighbourhood(), new_dense_chunk(), new_padded_voxels()))]
+#[bench::surface((vx_instr::surface_neighbourhood(), new_padded_voxels()))]
 fn gather_padded_chunk(
-    (window, mut scratch, mut padded): (
-        ChunkWindow<ChunkVoxels>,
-        Box<DenseChunk>,
-        Box<PaddedVoxels>,
-    ),
+    (window, mut padded): (ChunkWindow<ChunkVoxels>, Box<PaddedVoxels>),
 ) -> Box<PaddedVoxels> {
-    gather_padded(
-        &window,
-        black_box(vx_instr::SURFACE_CHUNK),
-        &mut scratch,
-        &mut padded,
-    )
-    .expect("all 26 neighbours were generated");
+    gather_padded(&window, black_box(vx_instr::SURFACE_CHUNK), &mut padded)
+        .expect("all 26 neighbours were generated");
     padded
 }
 

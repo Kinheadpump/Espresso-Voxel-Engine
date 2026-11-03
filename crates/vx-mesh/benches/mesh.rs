@@ -25,7 +25,7 @@ fn padded_surface_chunk() -> Box<PaddedVoxels> {
         }
     }
     let mut padded = new_padded_voxels();
-    gather_padded(&window, center, &mut scratch, &mut padded).expect("neighbours present");
+    gather_padded(&window, center, &mut padded).expect("neighbours present");
     padded
 }
 
@@ -82,5 +82,28 @@ fn gather_padded_surface(bencher: divan::Bencher) {
         }
     }
     let mut padded = new_padded_voxels();
-    bencher.bench_local(|| gather_padded(&window, black_box(center), &mut scratch, &mut padded));
+    bencher.bench_local(|| gather_padded(&window, black_box(center), &mut padded));
+}
+
+#[divan::bench]
+fn gather_and_mesh_surface_chunk(bencher: divan::Bencher) {
+    let generator = TerrainGenerator::new(TerrainSettings::default());
+    let center = ChunkPos::new(3, 2, -5);
+    let mut window: ChunkWindow<ChunkVoxels> = ChunkWindow::for_view_radius(2, 2);
+    let mut scratch = new_dense_chunk();
+    for dx in -1..=1 {
+        for dy in -1..=1 {
+            for dz in -1..=1 {
+                let pos = ChunkPos::new(center.0.x + dx, center.0.y + dy, center.0.z + dz);
+                window.insert(pos, generator.generate(pos, &mut scratch));
+            }
+        }
+    }
+    let mut padded = new_padded_voxels();
+    let mut mesher = BinaryGreedyMesher::default();
+    let mut mesh = ChunkMesh::default();
+    bencher.bench_local(|| {
+        gather_padded(&window, black_box(center), &mut padded).expect("neighbours present");
+        mesher.mesh(&padded, &mut mesh);
+    });
 }

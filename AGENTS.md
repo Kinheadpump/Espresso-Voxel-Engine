@@ -4,7 +4,7 @@ Guide for any coding agent (and human) working in this repo. Read this, then `do
 
 ## What this is
 
-A performance-first blocky voxel engine in Rust on wgpu. It is the third attempt; the first two (Decaf, Lemon) are preserved in their own repos and summarised in `docs/HISTORY.md`. Their full audits live in `docs/research/`.
+A performance-first blocky voxel engine in Rust on wgpu. Top-level goal: an infinite world with nearly infinite render distance (ADR-0016); no system may assume a bounded map or a world origin near the camera. It is the third attempt; the first two (Decaf, Lemon) are preserved in their own repos and summarised in `docs/HISTORY.md`. Their full audits live in `docs/research/`.
 
 ## Repo map
 

@@ -15,7 +15,6 @@ pub const CHUNK_VOLUME: usize = CHUNK_AREA * CHUNK_SIZE;
 pub const PADDED_SIZE: usize = CHUNK_SIZE + 2;
 pub const PADDED_VOLUME: usize = PADDED_SIZE * PADDED_SIZE * PADDED_SIZE;
 
-const _: () = assert!(CHUNK_SIZE.is_power_of_two());
 const _: () = assert!(
     PADDED_SIZE <= 64,
     "binary meshing stores a padded column in one u64"

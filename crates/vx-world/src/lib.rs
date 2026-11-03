@@ -5,5 +5,5 @@ mod window;
 
 pub use padded::{MissingNeighbour, gather_padded};
 pub use storage::{ChunkVoxels, DenseChunk, new_dense_chunk};
-pub use terrain::{BlockBox, TerrainGenerator, TerrainSettings};
+pub use terrain::{BlockBox, ColumnHeights, TerrainGenerator, TerrainSettings};
 pub use window::ChunkWindow;

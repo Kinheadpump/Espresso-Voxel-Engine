@@ -178,6 +178,8 @@ Why this order:
 
 ## B-09 Vertex AO
 
+**Status (2026-11-03):** dropped by ADR-0017. The AO probe measured +66.8% quads (computed); AO will be SSAO in S8.
+
 **Origin:** P-03 (0fps AO), R-06 (block-mesh-bgm 0.2.4, `meshing.md` §1). Roadmap item 15; the texture concept assumes it lands.
 
 **Technique (quoted, 0fps):** per-vertex AO from two side voxels and one corner voxel, 4 levels (2 bits) per vertex; merge greedy faces only when all four AO values match; flip the quad diagonal when `a00 + a11 > a01 + a10`. block-mesh-bgm does the AO-safe merge inside a binary greedy mesher, quoted at 0–15% extra mesher cost.
