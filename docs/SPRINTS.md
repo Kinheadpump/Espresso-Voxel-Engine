@@ -173,12 +173,12 @@ These extend the measure-first rule in `CLAUDE.md` and `docs/BENCHMARKING.md` to
 
 **Goal:** editing, saving and caves, each with a cost that the bench sees.
 
-**Scope:** B-13 batched edits with neighbour remesh (6 or 26 neighbours, per S2's rule), B-12 persistence (edited chunks only, lz4 vs zstd-3), B-11 3D noise for caves (coarse grid, interval bounds, direct palette writes) as a new terrain version, B-14 attribute channels (prepares light). New scenarios: `edit` (scripted edit sequence), `save-load`, `caves` (cave terrain version, frame-stepped streaming).
+**Scope:** B-13 batched edits with neighbour remesh (6 or 26 neighbours, per S2's rule), B-12 persistence (edited chunks only, lz4 vs zstd-3), B-11 3D noise for caves (coarse grid, interval bounds, direct palette writes) and B-23 overhangs in terrain v2, which becomes the default terrain at this sprint's start baseline (`docs/WORLDGEN.md`, ADR-0018), B-14 attribute channels (prepares light). New scenarios: `edit` (scripted edit sequence), `save-load`, `caves` (cave terrain version, frame-stepped streaming).
 
 **Exit gates:**
 - Edit-to-visible within 2 frames (target); one remesh per touched chunk per frame; edited LOD levels refresh.
 - Content hash identical after a save-load round trip; load faster than regenerate for edited chunks.
-- `caves` generation per chunk at most 1.5× S2's heightmap generation (target); uniform-chunk ratio recorded.
+- `caves` generation per chunk at most 1.5× S2's heightmap generation (target); uniform-chunk ratio recorded. Changed 2026-11-03: S2's heightmap generation means terrain v2 without caves (worldgen steps 1–5), because the caves now land in v2; the whole of v2 with caves stays at most 2.0× S2-end v1 (target, `docs/WORLDGEN.md`).
 - `default` and `far` (heightmap terrain) within noise of the S6 start baseline.
 
 **Dependencies:** S3 (remesh runs as streaming jobs), S5 (edits invalidate LOD levels).
@@ -226,6 +226,26 @@ These extend the measure-first rule in `CLAUDE.md` and `docs/BENCHMARKING.md` to
 
 **Risks:** shadows redraw geometry per cascade, and Lemon drew the union of chunks into every cascade (`docs/HISTORY.md`). Per-cascade culling is part of the scope, not an optimisation for later.
 
+## Parallel track: world generation
+
+**Goal:** terrain on the level of Minecraft 1.18+ and current research (Noah, 2026-11-03), inside ADR-0016's unbounded-world rules. Plan, stages and gates: `docs/WORLDGEN.md`; decision: ADR-0018; items B-11 and B-18 to B-25 in `docs/BACKLOG.md`.
+
+**How it runs beside the sprints:** the work is CPU-only in `vx-world`, so an agent can take it in parallel with S3–S5 without touching render code. Terrain v2 sits behind `--terrain v1|v2`; v1 stays the default, so every S3–S5 gate compares v1 against v1 (rule 3). v2 becomes the default at the S6 start baseline.
+
+| Worldgen step | Items | Carried by |
+|---|---|---|
+| 1. Lattice noise, `--terrain` switch, `vx worldmap`, per-stage benches | B-18 | S3 (it implements S3's ADR-0016 noise-precision item) |
+| 2. Climate, splines, folded ridges, range bounds | B-19, B-20 part 1 | S3–S4 track |
+| 3. Surface rules, biomes, water | B-25 | S4 track |
+| 4. LOD-direct sampling, horizon height function | B-20 part 2 | S5, before the first LOD ring |
+| 5. Erosion filter, rivers | B-21, B-22 | S5–S6 track |
+| 6. Caves, overhangs | B-11, B-23 | S6 |
+| 7. Trees | B-24 | S6 stretch, else S7 |
+
+**Gates:** each step's gate in `docs/WORLDGEN.md`, judged with `vx bench-compare` on `noah-msi-rtx2060` in one session against v1. Look changes also commit fixed screenshots and a `vx worldmap` image to `docs/worldgen/` and are shown to Noah with the PR; merges do not wait for his approval.
+
+**Risks:** budget creep from 3D density (kept to surface and cave bands, off at LOD ≥ 2); SIMD-width nondeterminism (cross-width hash test in step 1); a river graph that cannot guarantee downhill flow (ridge-band rivers ship first).
+
 ## Long-term targets
 
 All values in the Target column are **targets** on `noah-msi-rtx2060` at 1920×1080, flat shading unless stated. The Now column is measured (runs 1 and 2, `docs/PERFORMANCE.md`) or computed where said. The budget in `docs/PERFORMANCE.md` (frame ≤ 4 ms CPU, ≤ 8 ms GPU, no frame above 16 ms while streaming) stays the hard ceiling.
@@ -246,6 +266,8 @@ All values in the Target column are **targets** on `noah-msi-rtx2060` at 1920×1
 | Voxel heap per generated chunk, `far` | 2.7 KiB (computed: 58.6 MiB / 22,445) | ≤ 3 KiB, light channels included | S6, S8 |
 | Edit-to-visible latency | no editing | ≤ 2 frames | S6 |
 | Process resident memory, `far` | 131–132 MiB | ≤ 256 MiB at radius 32 with LOD and light | S8 |
+| World generation, terrain v2 with caves, `default` | v1 only | ≤ 2.0× S2-end v1, same session (`docs/WORLDGEN.md`) | S6 |
+| Far LOD height error vs level 0 | no LOD | ≤ 0.35 voxel at LOD ≤ 5 by construction (B-20) | S5 |
 
 A target that turns out wrong is changed in this table with the date and the measurement that showed it, never silently.
 

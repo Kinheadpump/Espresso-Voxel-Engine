@@ -85,3 +85,16 @@ Decided by:
 - The AO-safe greedy merge adds +66.8% quads at `default` and +67.5% at `far` (computed, AO probe), far above B-09's ~30% threshold, and the 26-neighbour rule costs about 12 blocks of meshed reach at the streaming edge (computed).
 - Under ADR-0016 both hold: LOD keeps chunk counts per ring constant, and vertex AO would add its quad cost at every LOD level while SSAO cost does not grow with reach.
 Decided by Noah's delegation (2026-11-03) on the recommended option.
+
+## ADR-0018 World generator architecture: staged, column-first, LOD-direct (Proposed, 2026-11-03)
+
+Context: Noah asked for world generation on the level of Minecraft 1.18+ and current research (2026-11-03), under ADR-0016's unbounded-world rules. Terrain v1 is one 2D fBm heightmap with `f32` coordinates. The survey in `docs/research/worldgen-2026-11/` found that the strong generators are column-first (Minecraft's spline-shaped climate noises, Cubyz, Luanti v7, Hytale) and that only pure-function techniques survive an infinite world with LOD-direct generation.
+Decision: build terrain v2 as the stage pipeline in `docs/WORLDGEN.md`:
+- Every stage is a pure function of seed, integer coordinates and LOD level. No stage reads another chunk; cross-chunk features come from hash cells with padding equal to the largest feature radius.
+- Noise is Espresso's own integer-lattice kernel (B-18): power-of-two wavelengths, integer cell plus exact `f32` fraction, no FMA, identical bits on scalar, SSE2 and AVX2, enforced by a content-hash test.
+- Terrain shape is 2D first (climate splines, folded ridges, damped or swiss fBm, erosion filter, rivers), cached per chunk column and LOD level. 3D density runs only in the surface and cave bands, on a 4×8×4 block lattice in absolute coordinates, and only at LOD 0–1.
+- LOD level L drops the octaves whose wavelength is under two voxels; the same functions feed the horizon tier. Simulation-based erosion is not used at runtime.
+- The erosion filter (B-21) is implemented clean-room from Johansen's published description; the MPL-2.0 reference code is not copied.
+- v2 sits beside v1 behind `--terrain v1|v2` and becomes the default at the S6 start baseline, so S3–S5 gates keep v1 content hashes.
+Alternatives: port Minecraft's full per-voxel density router (about 14k–26k octave evaluations per chunk, estimate, `minecraft.md` §9, several times the budget); simulate erosion over baked tiles (global, tile borders, offline step; Watch); FastNoise2 over FFI (C++ dependency, cross-width determinism undocumented; Watch as a speed reference); simdnoise (scalar and SIMD results differ, quoted; rejected); GPU generation for voxel chunks (readback spikes; Not adopted, kept only as a Watch item for the GPU-resident horizon clipmap).
+Decided by: the step gates in `docs/WORLDGEN.md`, chiefly v2 world generation at `default` at most 1.25× (shape), 1.6× (erosion and rivers) and 2.0× (caves) of S2-end v1 in the same session on `noah-msi-rtx2060` (targets); the cross-width hash test; the LOD tail-bound test; and committed screenshots for every look change, shown to Noah without blocking the merge.
