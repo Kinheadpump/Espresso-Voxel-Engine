@@ -17,7 +17,8 @@ fn main() -> Result<()> {
         Mode::Compare {
             baseline,
             candidate,
-        } => bench::compare(baseline, candidate),
+            allow_shading_change,
+        } => bench::compare(baseline, candidate, *allow_shading_change),
         Mode::Windowed => windowed::run(options),
     }
 }
