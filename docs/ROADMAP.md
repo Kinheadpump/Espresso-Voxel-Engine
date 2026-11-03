@@ -42,7 +42,7 @@ Ordered by expected impact on the core goal (view distance and frame time per wa
 14. Editing with remesh of affected neighbours; persistence (region files, palette-compressed).
 15. Per-vertex AO in the free quad bits (only merge equal-AO faces; measure the quad-count increase) or SSAO.
 16. Flood-fill sky and block light.
-17. Texture array, transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
+17. Block textures (concept and plan in `docs/TEXTURES.md`, ADR-0014: 16 px texture array, `--shading flat|textured` in the bench), transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
 18. Camera-relative rendering for large coordinates (world origin rebasing).
 
 ## Known issues
