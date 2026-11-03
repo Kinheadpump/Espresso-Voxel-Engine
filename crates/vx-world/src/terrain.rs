@@ -67,13 +67,13 @@ impl TerrainGenerator {
     pub fn surface_heights(&self, pos: ChunkPos, heights: &mut [i32; CHUNK_AREA]) {
         let origin = pos.min_block();
         for (column, height) in heights.iter_mut().enumerate() {
-            let x = origin.x + (column % CHUNK_SIZE) as i32;
-            let z = origin.z + (column / CHUNK_SIZE) as i32;
-            *height = self.surface_height_at(x, z);
+            let x = (origin.x + (column % CHUNK_SIZE) as i32) as f32;
+            let z = (origin.z + (column / CHUNK_SIZE) as i32) as f32;
+            let noise = self.height_noise.get_noise_2d(x, z);
+            *height = self.settings.sea_level + (noise * self.settings.amplitude) as i32;
         }
     }
 
-    #[inline(always)]
     pub fn surface_height_at(&self, x: i32, z: i32) -> i32 {
         let noise = self.height_noise.get_noise_2d(x as f32, z as f32);
         self.settings.sea_level + (noise * self.settings.amplitude) as i32
