@@ -1,6 +1,6 @@
 # Texture and visual style concept
 
-Status: **Proposed** (ADR-0014). Phase 1 is this concept; phase 2 (implementation) starts after Noah picks a direction.
+Status: **Direction chosen 2026-11-03: A, crisp 16 px** (Noah). ADR-0014 stays Proposed until phase 2's GPU measurement is in.
 
 All images in `docs/textures/` come from `tools/texture-concept/` (Python, numpy + Pillow, deterministic). The mock-ups are a CPU ray-caster that copies `terrain.wgsl`'s shading (per-direction shade, exponential fog), so the only thing that changes between them is the surface. They are **illustrations, not engine renders and not performance data**.
 
