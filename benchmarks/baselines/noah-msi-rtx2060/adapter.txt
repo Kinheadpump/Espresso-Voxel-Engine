@@ -1,0 +1,4 @@
+adapter: NVIDIA GeForce RTX 2060 | backend: Vulkan | type: DiscreteGpu | driver: NVIDIA 616.92
+tier: GpuDrivenWithCount | timestamps: true
+features: Features { features_wgpu: FeaturesWGPU(TIMESTAMP_QUERY_INSIDE_PASSES | MULTI_DRAW_INDIRECT_COUNT | SHADER_DRAW_INDEX), features_webgpu: FeaturesWebGPU(TIMESTAMP_QUERY | INDIRECT_FIRST_INSTANCE) }
+max_storage_buffer_binding_size: 2047 MiB | max_buffer_size: 4095 MiB
