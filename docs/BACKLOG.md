@@ -187,6 +187,8 @@ Why this order:
 
 ## B-09 Vertex AO
 
+**Status (2026-11-03):** dropped by ADR-0017. The AO probe measured +66.8% quads (computed); AO will be SSAO in S8.
+
 **Origin:** P-03 (0fps AO), R-06 (block-mesh-bgm 0.2.4, `meshing.md` §1). Roadmap item 15; the texture concept assumes it lands.
 
 **Technique (quoted, 0fps):** per-vertex AO from two side voxels and one corner voxel, 4 levels (2 bits) per vertex; merge greedy faces only when all four AO values match; flip the quad diagonal when `a00 + a11 > a01 + a10`. block-mesh-bgm does the AO-safe merge inside a binary greedy mesher, quoted at 0–15% extra mesher cost.
@@ -306,7 +308,7 @@ Why this order:
 
 **Origin:** worldgen survey 2026-11 (`docs/research/worldgen-2026-11/noise-performance-lod.md` §1, §2, §7). Implements ADR-0016's noise-precision rule. Step 1 of `docs/WORLDGEN.md`.
 
-**Now:** fastnoise-lite takes block coordinates as `f32`; spacing is 0.0078 blocks at 64 km and 0.125 blocks at 2^20 blocks (computed). S2 samples heights once per chunk column (PR #17).
+**Now:** fastnoise-lite takes block coordinates as `f32`; spacing is 0.0078 blocks at 64 km and 0.125 blocks at 2^20 blocks (computed). S2 samples heights once per chunk column (merged in PR #17).
 
 **Change:**
 1. Own gradient and value noise on an integer lattice: power-of-two base wavelength, lacunarity 2, `cell = x >> s` and an exact `f32` fraction, integer hash with a mixed seed and integer offset per octave, no rotations.
@@ -331,7 +333,7 @@ Why this order:
 
 **Effort:** M.
 
-**Decided by:** v2 world generation at `default` ≤ 1.25× v1 in the same session (target); uniform-chunk ratio ≥ v1's; `vx worldmap` and screenshots reviewed by Noah.
+**Decided by:** v2 world generation at `default` ≤ 1.25× v1 in the same session (target); uniform-chunk ratio ≥ v1's; `vx worldmap` and screenshots shown to Noah.
 
 ## B-20 LOD-direct sampling and range bounds
 
@@ -356,13 +358,13 @@ Why this order:
 
 **Now:** plain fBm; slopes have no gullies or drainage look.
 
-**Change:** base height as derivative-damped fBm (IQ) or swiss turbulence, which yield the analytic gradient; then Johansen's erosion filter with Phacelle noise on height and gradient, implemented clean-room from the published description (ADR-0017; the reference code is MPL-2.0). Filter octaves truncate per LOD like B-20.
+**Change:** base height as derivative-damped fBm (IQ) or swiss turbulence, which yield the analytic gradient; then Johansen's erosion filter with Phacelle noise on height and gradient, implemented clean-room from the published description (ADR-0018; the reference code is MPL-2.0). Filter octaves truncate per LOD like B-20.
 
 **Expected (estimate):** 16 taps per filter octave (one `exp`, one `sin_cos` each), about 3.3 kflop per column at 5 octaves.
 
 **Effort:** M.
 
-**Decided by:** ns per column scalar and `f32x8` (divan); v2 world generation ≤ 1.6× v1 together with B-22 (target); chunk-seam test; screenshots reviewed by Noah.
+**Decided by:** ns per column scalar and `f32x8` (divan); v2 world generation ≤ 1.6× v1 together with B-22 (target); chunk-seam test; screenshots shown to Noah.
 
 ## B-22 Rivers
 
@@ -418,7 +420,7 @@ Why this order:
 
 **Effort:** S–M.
 
-**Decided by:** v2 world generation ≤ 1.35× v1 (target); screenshots and `vx worldmap` reviewed by Noah.
+**Decided by:** v2 world generation ≤ 1.35× v1 (target); screenshots and `vx worldmap` shown to Noah.
 
 ---
 
@@ -457,7 +459,7 @@ Revisit when the stated condition changes.
 - **GPU world generation:** readback spikes (quoted author complaint).
 - **Lossy VDB brick compression:** lossy, for volume rendering, not faster than a dense texture on 4 of 5 data sets (quoted).
 - **Transvoxel:** marching cubes only; the blocky equivalent is B-08's border faces.
-- **Minecraft's generation-status pyramid and 3×3 feature neighbourhood:** breaks chunk-locality (ADR-0016, ADR-0017); B-24's hash cells replace it.
+- **Minecraft's generation-status pyramid and 3×3 feature neighbourhood:** breaks chunk-locality (ADR-0016, ADR-0018); B-24's hash cells replace it.
 - **Runtime erosion simulation** (Mei 2007 GPU hydraulic, particle erosion): global grids or order-dependent droplets (`erosion-rivers-papers.md` §3.4).
 - **simdnoise as the noise authority:** its scalar and SIMD outputs differ (quoted), which changes block heights per machine. `std::simd`: still nightly.
 - **Lochner 2023 diffusion authoring:** tile-based, not seamless.

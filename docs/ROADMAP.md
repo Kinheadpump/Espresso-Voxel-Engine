@@ -42,7 +42,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 15. Per-vertex AO in the free quad bits (only merge equal-AO faces; measure the quad-count increase) or SSAO.
 16. Flood-fill sky and block light.
 17. ~~Block textures~~ done (16 px texture array, `--shading flat|textured`; ADR-0014 accepted at +8.6% GPU terrain pass in `default`, measured; `docs/TEXTURES.md`). Transparent pass (water/glass), cascaded shadows with per-cascade GPU culling and cached far cascades.
-18. Camera-relative rendering for large coordinates (world origin rebasing).
+18. Camera-relative rendering for large coordinates (chunk + local camera, ADR-0016). Scheduled in S3.
 
 ## Known issues
 
@@ -54,7 +54,7 @@ What we build next, in order of expected impact on the core goal (view distance 
 
 ## Parallel track: world generation
 
-Terrain v2 (ADR-0017), CPU-only behind `--terrain v1|v2`, default from S6. Steps, gates and sprint placement: `docs/WORLDGEN.md` and `docs/SPRINTS.md` (parallel track).
+Terrain v2 (ADR-0018), CPU-only behind `--terrain v1|v2`, default from S6. Steps, gates and sprint placement: `docs/WORLDGEN.md` and `docs/SPRINTS.md` (parallel track).
 
 19. Integer-lattice noise kernel, `--terrain` switch, `vx worldmap` (B-18). Verify: cross-width content hash, world generation within noise of v1.
 20. Climate splines, folded ridges, range bounds; surface rules, biomes, water (B-19, B-20 part 1, B-25). Verify: ≤ 1.35× v1 world generation, screenshots reviewed.

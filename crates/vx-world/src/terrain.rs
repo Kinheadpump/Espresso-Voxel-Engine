@@ -46,6 +46,9 @@ impl Default for TerrainSettings {
     }
 }
 
+/// Surface height of every block column of one chunk column, indexed `z * CHUNK_SIZE + x`.
+pub type ColumnHeights = [i32; CHUNK_AREA];
+
 pub struct TerrainGenerator {
     settings: TerrainSettings,
     height_noise: FastNoiseLite,
@@ -64,7 +67,7 @@ impl TerrainGenerator {
         }
     }
 
-    pub fn surface_heights(&self, pos: ChunkPos, heights: &mut [i32; CHUNK_AREA]) {
+    pub fn surface_heights(&self, pos: ChunkPos, heights: &mut ColumnHeights) {
         let origin = pos.min_block();
         for (column, height) in heights.iter_mut().enumerate() {
             let x = (origin.x + (column % CHUNK_SIZE) as i32) as f32;
@@ -80,9 +83,20 @@ impl TerrainGenerator {
     }
 
     pub fn generate(&self, pos: ChunkPos, dense_scratch: &mut DenseChunk) -> ChunkVoxels {
-        profiling::scope!("generate_chunk");
         let mut heights = [0i32; CHUNK_AREA];
         self.surface_heights(pos, &mut heights);
+        self.generate_in_column(pos, &heights, dense_scratch)
+    }
+
+    /// Generates one chunk from heights already sampled for its column (`surface_heights` of any
+    /// chunk with the same x and z), so a column's chunks share one set of noise samples.
+    pub fn generate_in_column(
+        &self,
+        pos: ChunkPos,
+        heights: &ColumnHeights,
+        dense_scratch: &mut DenseChunk,
+    ) -> ChunkVoxels {
+        profiling::scope!("generate_chunk");
         let chunk_bottom = pos.min_block().y;
         let chunk_top = chunk_bottom + CHUNK_SIZE_I32;
         let (lowest, highest) = heights

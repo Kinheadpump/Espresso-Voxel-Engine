@@ -2579,7 +2579,9 @@ dependencies = [
 name = "vx-instr"
 version = "0.1.0"
 dependencies = [
+ "glam",
  "gungraun",
+ "rayon",
  "vx-core",
  "vx-mesh",
  "vx-world",

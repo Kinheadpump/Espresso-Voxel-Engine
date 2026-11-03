@@ -1,6 +1,6 @@
 # World generation plan
 
-The staged plan for Espresso's second terrain generator ("terrain v2"): what it computes, in which order the stages land, which sprint carries each stage, and the benchmark gate that keeps or reverts it. Written 2026-11-03 against `main` at `6b20c4e`, with the S2 work in PR #17 assumed merged. The evidence is in `docs/research/worldgen-2026-11/`, the ranking in `docs/BACKLOG.md` (B-11, B-18 to B-25), the architecture decision in ADR-0017. Numbers follow `docs/DOC-GUIDELINES.md` §4.
+The staged plan for Espresso's second terrain generator ("terrain v2"): what it computes, in which order the stages land, which sprint carries each stage, and the benchmark gate that keeps or reverts it. Written 2026-11-03 against `main` at `492c06e` (S2 merged in PR #17). The evidence is in `docs/research/worldgen-2026-11/`, the ranking in `docs/BACKLOG.md` (B-11, B-18 to B-25), the architecture decision in ADR-0018. Numbers follow `docs/DOC-GUIDELINES.md` §4.
 
 ## Goal
 
@@ -9,10 +9,10 @@ A world that looks designed at every scale (continents, mountain ranges with ero
 ## Now
 
 - `crates/vx-world/src/terrain.rs` (terrain v1): one 2D OpenSimplex2 fBm heightmap (5 octaves, wavelength 250 blocks, amplitude 48) through fastnoise-lite with `f32` block coordinates, grass/dirt/stone layers, `Uniform` air or stone above and below the column's height range.
-- World generation at `default` is 70.6–73.5 ms for 6,125 chunks on `noah-msi-rtx2060`, down from 152.4–160.3 ms in the same session, after the S2 column-shared height noise (measured, S2 gate, `docs/PERFORMANCE.md` in PR #17). That is about 0.14 ms of core time per chunk (computed: 72 ms × 12 threads / 6,125).
+- World generation at `default` is 70.6–73.5 ms for 6,125 chunks on `noah-msi-rtx2060`, down from 152.4–160.3 ms in the same session, after the S2 column-shared height noise (measured, S2 gate, `docs/PERFORMANCE.md`). That is about 0.14 ms of core time per chunk (computed: 72 ms × 12 threads / 6,125).
 - No biomes, water, caves, rivers or decoration. Coordinates go into the noise as `f32`, which ADR-0016 says must change.
 
-## Architecture (ADR-0017)
+## Architecture (ADR-0018)
 
 Every stage is a pure function of `(seed, integer coordinates, LOD level)`. 2D stages run once per chunk column per LOD level and are cached with it; 3D work runs only for chunks whose bounds straddle the surface or that can contain caves.
 
@@ -37,7 +37,7 @@ Terrain v2 lives beside v1 behind `--terrain v1|v2` in `vx`, `vx bench` and `--s
 |---|---|---|---|
 | 1. Lattice and tooling | B-18; `--terrain` switch; `vx worldmap` (top-down height and biome PNG of a 16 km square, for review); divan and gungraun benches per stage | S3 (implements S3's ADR-0016 noise-precision item) | v2 with v1-equivalent settings: world generation at `default` within noise of v1 or faster; identical content hash for scalar, SSE2 and AVX2 builds; far-origin test at block 2^30 against an `f64` reference |
 | 2. Shape and classification | B-19 climate + splines + folded ridges; B-20 part 1 per-octave range bounds | S3–S4 track | v2 world generation at `default` ≤ 1.25× v1 (same session); uniform-chunk ratio at `default` and `far` recorded and ≥ v1's |
-| 3. Surface and biomes | B-25 surface rules, biome lookup, water at sea level, new block ids with textures (ADR-0014 style) | S4 track | v2 ≤ 1.35× v1 world generation; `vx worldmap` and three fixed `--screenshot` views committed to `docs/worldgen/` for Noah's review |
+| 3. Surface and biomes | B-25 surface rules, biome lookup, water at sea level, new block ids with textures (ADR-0014 style) | S4 track | v2 ≤ 1.35× v1 world generation; `vx worldmap` and three fixed `--screenshot` views committed to `docs/worldgen/` and shown to Noah |
 | 4. LOD-direct sampling | B-20 part 2: octave truncation per LOD, tail-bound test, horizon height function | S5 (before the first LOD ring) | Unit test: \|H_L − H_0\| ≤ tail(L) over 10⁷ samples; 2D cost per far chunk at LOD ≥ 3 ≤ 60% of level 0 (target from `noise-performance-lod.md` §8) |
 | 5. Erosion and rivers | B-21 erosion filter; B-22 ridge-band rivers, then the river graph if the bands look wrong | S5–S6 track | v2 ≤ 1.6× v1 world generation; river test: no uphill step along any river centreline over a 16 km square; chunk-seam test (heights equal across every chunk border) |
 | 6. Caves and overhangs | B-11 (cheese and spaghetti caves, coarse lattice, interval bounds, direct palette writes), B-23 overhangs | S6 | S6's `caves` gate; v2 with caves ≤ 2.0× v1 world generation at `default` (S2-end v1 as the reference) |
@@ -47,7 +47,7 @@ Each step is a separate PR with its own `bench-compare` table in `docs/PERFORMAN
 
 ## Visual review
 
-Speed gates cannot judge whether terrain looks good. From step 3 on, every step that changes the look adds the same three fixed views (`--screenshot`, textured shading, seed 1337: valley, ridge, coast) and a `vx worldmap` PNG to `docs/worldgen/`, so Noah can compare steps side by side. A look change merges only after Noah has seen the images; speed-only changes follow the normal rules.
+Speed gates cannot judge whether terrain looks good. From step 3 on, every step that changes the look adds the same three fixed views (`--screenshot`, textured shading, seed 1337: valley, ridge, coast) and a `vx worldmap` PNG to `docs/worldgen/`, so Noah can compare steps side by side. The images are posted to Noah with the PR, but a look change does not wait for his approval (Noah, 2026-11-03: decisions are made without waiting on him); he can ask for a revert or a retune afterwards.
 
 ## Risks
 

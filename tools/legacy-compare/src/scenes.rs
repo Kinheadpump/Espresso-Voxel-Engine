@@ -38,7 +38,7 @@ fn surface() -> Box<PaddedVoxels> {
         }
     }
     let mut padded = new_padded_voxels();
-    gather_padded(&window, center, &mut scratch, &mut padded).expect("neighbours present");
+    gather_padded(&window, center, &mut padded).expect("neighbours present");
     padded
 }
 

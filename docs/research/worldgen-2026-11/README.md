@@ -1,6 +1,6 @@
 # World generation research (2026-11)
 
-> Snapshot, 2026-11-03. Candidates from these reports are ranked in `docs/BACKLOG.md` (B-18 to B-25, plus additions to B-11, Watch and Not adopted). The staged plan built on them is `docs/WORLDGEN.md`; the architecture decision is ADR-0017 in `docs/DECISIONS.md`.
+> Snapshot, 2026-11-03. Candidates from these reports are ranked in `docs/BACKLOG.md` (B-18 to B-25, plus additions to B-11, Watch and Not adopted). The staged plan built on them is `docs/WORLDGEN.md`; the architecture decision is ADR-0018 in `docs/DECISIONS.md`.
 
 Question: how do Minecraft 1.18+, research papers and other engines generate convincing terrain, and which of those techniques fit Espresso's unbounded world (ADR-0016): deterministic from seed and integer coordinates, chunk-local or column-local, precise far from the origin, and able to generate far LOD levels directly at 2^L block spacing?
 
