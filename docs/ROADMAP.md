@@ -51,3 +51,13 @@ What we build next, in order of expected impact on the core goal (view distance 
 - Greedy meshing can create T-junctions; a faint sub-pixel seam was visible in one headless frame. Check on the RTX 2060 before deciding whether it needs fixing (backlog B-10).
 - ~~Frame CPU encode grows with draw count~~ Fixed 2026-11-03: wgpu's indirect-draw validation, now off in release (backlog B-02, ADR-0015).
 - Region build in the app is a fixed square; no streaming yet.
+
+## Parallel track: world generation
+
+Terrain v2 (ADR-0017), CPU-only behind `--terrain v1|v2`, default from S6. Steps, gates and sprint placement: `docs/WORLDGEN.md` and `docs/SPRINTS.md` (parallel track).
+
+19. Integer-lattice noise kernel, `--terrain` switch, `vx worldmap` (B-18). Verify: cross-width content hash, world generation within noise of v1.
+20. Climate splines, folded ridges, range bounds; surface rules, biomes, water (B-19, B-20 part 1, B-25). Verify: ≤ 1.35× v1 world generation, screenshots reviewed.
+21. LOD-direct sampling and the horizon height function (B-20 part 2). Verify: tail-bound test before the first S5 LOD ring.
+22. Erosion filter and rivers (B-21, B-22). Verify: ≤ 1.6× v1, no-uphill river test, seam test.
+23. Caves, overhangs, trees (B-11, B-23, B-24). Verify: S6 `caves` gate, ≤ 2.0× v1, no cut-off trees.

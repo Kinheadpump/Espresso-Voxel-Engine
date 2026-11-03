@@ -19,18 +19,26 @@ Ranked by expected gain on the core goal (view distance and frame time) per unit
 | 3 | B-03 | Decode straight into the padded mesher input | P-01 | S–M | Up to ~40% more meshed chunks/s (estimate) | divan `gather_and_mesh_surface_chunk`, meshing ms |
 | 4 | B-04 | Streaming rules: forward-frustum priority, teleport boost, slot-epoch staleness, retire-frame frees | R-08 | M | Fixes pop-in order and wasted jobs (quoted, qualitative) | time-to-fill-view, wasted-job %, frame p99 while flying |
 | 5 | B-05 | Upload time budget and suballocated buffers | P-05 | M | No frame spikes while streaming (quoted, qualitative) | frame p99 and max while flying, upload ms per frame |
-| 6 | B-06 | Compute face-direction + frustum cull, atomic-compacted draws | R-02 | M | Up to ~2× fewer vertex invocations for far chunks (estimate) | quads submitted, terrain-pass GPU ms, identical image |
-| 7 | B-07 | Occlusion culling: pick one of visibility graph, occluder quads, two-phase Hi-Z | R-03, P-02, roadmap 11 | M each | +5–25% sections culled for the graph (quoted) | B-01 counters in `cave`/`mountain`, net GPU ms |
-| 8 | B-08 | Cubyz-style LOD: one ring per level, real-child downsample, border faces instead of skirts | P-04, R-04, R-05 | M–L | View distance 2^L × level 0 per extra level (computed) | max radius at fixed frame and VRAM budget, seam test |
-| 9 | B-09 | Vertex AO: 26-neighbour gather, AO-safe greedy merge, 2-bit corner AO in free quad bits | P-03, R-06 | M | AO at zero extra bytes; mesher +0–15% (quoted) | quad count, mesh µs, opaque GPU ms vs SSAO |
-| 10 | B-10 | T-junction seam fix by quad dilation | P-11 | S | No sky-coloured pixel leaks | pixel-count test on headless screenshots |
-| 11 | B-11 | 3D noise: coarse density grid + interpolation + masks, interval range analysis, direct palette writes | P-09, R-09 | S–M | 4–8× fewer noise evaluations per chunk (estimate) | gen µs per chunk on a cave seed |
-| 12 | B-12 | Persistence: edited chunks only, palette words + zstd/lz4, region files | P-08, R-07 | M | 65 KB → 5.7 KB per cave chunk in Stardance (quoted) | bytes per chunk, load vs regenerate ms, hash round-trip |
-| 13 | B-13 | Batched edit API | P-07 | M | One remesh per chunk per frame however many voxels change | edits/s, edit-to-visible latency |
-| 14 | B-14 | Attribute channels with the storage shape | P-06 | M | Light and metadata cost zero in uniform chunks | voxel + light heap MiB at radius 32 |
-| 15 | B-15 | Starlight-style light propagation | R-13 | M | ~2× faster than vanilla Minecraft 1.20 (quoted) | light µs per chunk vs 174 µs torch baseline (quoted) |
-| 16 | B-16 | 1-bit occupancy volume for ray-marched AO, shadows, GI | P-10, R-11 | L | Off-screen-correct AO without a second scene format (estimate) | GPU ms vs SSAO + CSM at equal quality |
-| 17 | B-17 | Voxy hierarchical GPU LOD traversal | R-12 | L | Not quoted | GPU ms, nodes visited, request-queue latency |
+| 6 | B-18 | Integer-lattice noise kernel: power-of-two wavelengths, own hash, SoA column batches, identical bits on scalar/SSE2/AVX2 | worldgen survey 2026-11 | M | Precision at any distance (ADR-0016) and the prefix property LOD needs; 2D height ≤ 20 ns per column (target) | `vx bench` world generation within noise of v1 or faster; cross-width hash test |
+| 7 | B-06 | Compute face-direction + frustum cull, atomic-compacted draws | R-02 | M | Up to ~2× fewer vertex invocations for far chunks (estimate) | quads submitted, terrain-pass GPU ms, identical image |
+| 8 | B-07 | Occlusion culling: pick one of visibility graph, occluder quads, two-phase Hi-Z | R-03, P-02, roadmap 11 | M each | +5–25% sections culled for the graph (quoted) | B-01 counters in `cave`/`mountain`, net GPU ms |
+| 9 | B-20 | LOD-direct sampling: per-octave range bounds and octave truncation with a tail bound | worldgen survey 2026-11 | M | Far LOD within ~0.2–0.35 voxel of level 0 (computed); 2D cost at LOD ≥ 3 ≤ 60% of level 0 (target) | tail-bound test, uniform-chunk ratio, gen µs per far chunk |
+| 10 | B-08 | Cubyz-style LOD: one ring per level, real-child downsample, border faces instead of skirts | P-04, R-04, R-05 | M–L | View distance 2^L × level 0 per extra level (computed) | max radius at fixed frame and VRAM budget, seam test |
+| 11 | B-19 | Climate fields with spline terrain shaping and folded ridges (Minecraft 1.18 style, Tectonic scale) | worldgen survey 2026-11 | M | Continents, mountain ranges, plains from 2D work only | v2 world generation ≤ 1.25× v1; screenshots |
+| 12 | B-09 | Vertex AO: 26-neighbour gather, AO-safe greedy merge, 2-bit corner AO in free quad bits | P-03, R-06 | M | AO at zero extra bytes; mesher +0–15% (quoted) | quad count, mesh µs, opaque GPU ms vs SSAO |
+| 13 | B-10 | T-junction seam fix by quad dilation | P-11 | S | No sky-coloured pixel leaks | pixel-count test on headless screenshots |
+| 14 | B-25 | Surface rules, biome lookup table, water at sea level | worldgen survey 2026-11 | S–M | Biomes and coasts at per-column cost | v2 ≤ 1.35× v1; screenshots |
+| 15 | B-11 | 3D noise: coarse density grid + interpolation + masks, interval range analysis, direct palette writes | P-09, R-09 | S–M | 4–8× fewer noise evaluations per chunk (estimate) | gen µs per chunk on a cave seed |
+| 16 | B-21 | Erosion filter (Johansen, Phacelle) on damped fBm with analytic gradient | worldgen survey 2026-11 | M | Eroded valleys and gullies without simulation; ~3.3 kflop per column at 5 octaves (estimate) | ns per column, v2 ≤ 1.6× v1 with B-22; screenshots |
+| 17 | B-22 | Rivers: folded-ridge bands first, then a jittered-grid river graph | worldgen survey 2026-11 | M–L | Continuous rivers at ~1 kflop per column (estimate) | no-uphill test on a 16 km square, seam test |
+| 18 | B-23 | Overhangs: 3D jaggedness band on the 4×8×4 lattice | worldgen survey 2026-11 | S–M | Cliffs and arches at ≤ 405 lattice points per surface chunk (computed) | gen µs per surface chunk, uniform ratio |
+| 19 | B-12 | Persistence: edited chunks only, palette words + zstd/lz4, region files | P-08, R-07 | M | 65 KB → 5.7 KB per cave chunk in Stardance (quoted) | bytes per chunk, load vs regenerate ms, hash round-trip |
+| 20 | B-13 | Batched edit API | P-07 | M | One remesh per chunk per frame however many voxels change | edits/s, edit-to-visible latency |
+| 21 | B-24 | Hash-cell decoration: trees and structures with per-chunk feature lists | worldgen survey 2026-11 | M | Cross-chunk features with no neighbour access | zero cut-off trees over 10⁴ chunks; ≤ 10% of world generation |
+| 22 | B-14 | Attribute channels with the storage shape | P-06 | M | Light and metadata cost zero in uniform chunks | voxel + light heap MiB at radius 32 |
+| 23 | B-15 | Starlight-style light propagation | R-13 | M | ~2× faster than vanilla Minecraft 1.20 (quoted) | light µs per chunk vs 174 µs torch baseline (quoted) |
+| 24 | B-16 | 1-bit occupancy volume for ray-marched AO, shadows, GI | P-10, R-11 | L | Off-screen-correct AO without a second scene format (estimate) | GPU ms vs SSAO + CSM at equal quality |
+| 25 | B-17 | Voxy hierarchical GPU LOD traversal | R-12 | L | Not quoted | GPU ms, nodes visited, request-queue latency |
 
 Taken up elsewhere: **R-10** (texture array with repeat sampler instead of an atlas) is the basis of the texture concept, `docs/TEXTURES.md` and ADR-0014 (PR #4).
 
@@ -43,6 +51,7 @@ Why this order:
 5. **B-06** is the cheapest step of ADR-0010 (roadmap 9). **B-07** follows only when B-01 shows real occlusion in `cave` and `mountain`.
 6. **B-08** is the concrete ADR-0011 prototype.
 7. Looks (**B-09**, **B-10**) and world features (**B-11** to **B-15**) wait for streaming. **B-16** and **B-17** are research-sized.
+8. World generation (added 2026-11-03, `docs/WORLDGEN.md`): **B-18** ranks high because ADR-0016 needs its precision fix anyway and every later stage relies on it. **B-20** sits just before B-08 because LOD rings need it. **B-19**, **B-25**, **B-21**, **B-22**, **B-23** and **B-24** are CPU-only and run as a parallel track behind `--terrain v2`, so they never block the GPU sprints.
 
 ---
 
@@ -204,6 +213,8 @@ Why this order:
 
 ## B-11 3D noise for caves and overhangs
 
+2026-11-03: concrete cave formulas (cheese, spaghetti, noodle) and the 4×8×4 lattice cost are in `docs/research/worldgen-2026-11/minecraft.md` §3 and §9; B-11 is step 6 of `docs/WORLDGEN.md`, generated in terrain v2 only and off at LOD ≥ 2. Overhangs moved to B-23.
+
 **Origin:** P-09 (Voxel Tools range analysis), R-09 (Hytale worldgen notes 2026, Minecraft `NoiseChunk`, Noisium). Builds on ADR-0009.
 
 **Now:** `TerrainGenerator::generate` returns `Uniform` air or stone from the heightmap min/max without filling the chunk. Terrain generate is 140–149 µs per surface chunk (measured, cloud VM, divan), and region generation is ~2.5× meshing on the RTX 2060 machine (measured).
@@ -291,6 +302,124 @@ Why this order:
 
 **Decided by:** GPU ms, nodes visited and rendered per level, request-queue latency, with the camera in a valley and on a ridge.
 
+## B-18 Integer-lattice noise kernel
+
+**Origin:** worldgen survey 2026-11 (`docs/research/worldgen-2026-11/noise-performance-lod.md` §1, §2, §7). Implements ADR-0016's noise-precision rule. Step 1 of `docs/WORLDGEN.md`.
+
+**Now:** fastnoise-lite takes block coordinates as `f32`; spacing is 0.0078 blocks at 64 km and 0.125 blocks at 2^20 blocks (computed). S2 samples heights once per chunk column (PR #17).
+
+**Change:**
+1. Own gradient and value noise on an integer lattice: power-of-two base wavelength, lacunarity 2, `cell = x >> s` and an exact `f32` fraction, integer hash with a mixed seed and integer offset per octave, no rotations.
+2. SoA kernel over the 1,024 columns of a chunk column, plain lane-independent loops, no `mul_add`, no libm, no table gathers; `multiversion` dispatch for baseline and x86-64-v3.
+3. Ships as terrain v2 with v1-equivalent settings behind `--terrain v1|v2`, plus `vx worldmap` for top-down review.
+
+**Expected (target):** 2D 5-octave height ≤ 20 ns per column; identical quality at any distance.
+
+**Effort:** M.
+
+**Decided by:** `vx bench` world generation at `default`, v2 within noise of v1 or faster; content hash identical for scalar, SSE2 and AVX2 builds at coordinates up to ±2^24; far-origin test at 2^30 against an `f64` reference.
+
+## B-19 Climate fields and spline terrain shaping
+
+**Origin:** worldgen survey 2026-11 (`minecraft.md` §2, §6, `other-engines.md` §1, §9). Step 2 of `docs/WORLDGEN.md`.
+
+**Now:** one fBm height, no notion of continents, plains or mountain ranges.
+
+**Change:** continentalness, erosion and ridge noises on a coarse 2D lattice (32–64 blocks, interpolated); ridges folded into peaks and valleys (`1 − |3|r| − 2|` form, `minecraft.md` §2); cubic splines map them to surface offset, factor and jaggedness, with Tectonic-style scale knobs (continents 2× larger than vanilla). Temperature and humidity on the same lattice for B-25.
+
+**Expected (estimate):** about 38 octave evaluations per column for the three spline inputs at vanilla settings (`minecraft.md` §1), fewer on the coarse lattice.
+
+**Effort:** M.
+
+**Decided by:** v2 world generation at `default` ≤ 1.25× v1 in the same session (target); uniform-chunk ratio ≥ v1's; `vx worldmap` and screenshots reviewed by Noah.
+
+## B-20 LOD-direct sampling and range bounds
+
+**Origin:** worldgen survey 2026-11 (`noise-performance-lod.md` §3, §4; `other-engines.md` §1 for Cubyz). Steps 2 and 4 of `docs/WORLDGEN.md`. Prerequisite for B-08's far rings (ADR-0016).
+
+**Now:** the uniform shortcut uses the exact min/max of the chunk column's 1,024 heights; no LOD.
+
+**Change:**
+1. Per-octave range bound `Σ min(2·a_k, a_k·Lip·f_k·r)` to classify chunks and sub-blocks as air, solid or mixed before any 3D work.
+2. LOD level L evaluates only octaves with wavelength ≥ 2 voxels (2^(L+1) blocks); every stage is written so octave k depends only on octaves below k.
+3. The same height function at 64–256 block spacing feeds the horizon tier.
+
+**Expected (computed):** far terrain within 0.19, 0.29 and 0.34 voxel of level 0 at LOD 3, 4 and 5 with today's settings; 2D cost per far chunk 20–60% lower than level 0.
+
+**Effort:** M.
+
+**Decided by:** unit test |H_L − H_0| ≤ tail(L) over 10⁷ samples; gen µs per far chunk at LOD ≥ 3 ≤ 60% of level 0 (target); `horizon` scenario in S5.
+
+## B-21 Erosion filter
+
+**Origin:** worldgen survey 2026-11 (`erosion-rivers-papers.md` §1.1, §1.2, §1.4). Step 5 of `docs/WORLDGEN.md`.
+
+**Now:** plain fBm; slopes have no gullies or drainage look.
+
+**Change:** base height as derivative-damped fBm (IQ) or swiss turbulence, which yield the analytic gradient; then Johansen's erosion filter with Phacelle noise on height and gradient, implemented clean-room from the published description (ADR-0017; the reference code is MPL-2.0). Filter octaves truncate per LOD like B-20.
+
+**Expected (estimate):** 16 taps per filter octave (one `exp`, one `sin_cos` each), about 3.3 kflop per column at 5 octaves.
+
+**Effort:** M.
+
+**Decided by:** ns per column scalar and `f32x8` (divan); v2 world generation ≤ 1.6× v1 together with B-22 (target); chunk-seam test; screenshots reviewed by Noah.
+
+## B-22 Rivers
+
+**Origin:** worldgen survey 2026-11 (`erosion-rivers-papers.md` §2, `minecraft.md` §6). Step 5 of `docs/WORLDGEN.md`.
+
+**Now:** no rivers.
+
+**Change:** first, Tectonic-style rivers where the folded ridge value falls in a narrow band, carved after erosion. If the bands read as wrong (rivers that do not flow anywhere), prototype a jittered-grid river graph: one candidate node per cell per level, edges to the lowest neighbour within a bounded 3×3 neighbourhood, width by level, coarse levels dropped per LOD.
+
+**Expected (estimate):** about 1 kflop per column for the graph; the band variant costs a compare after B-19's ridge noise.
+
+**Effort:** M (bands S, graph M–L).
+
+**Decided by:** no uphill step along any river centreline over a 16 km square; chunk-seam test; cost inside B-21's shared budget.
+
+## B-23 Overhangs
+
+**Origin:** worldgen survey 2026-11 (`minecraft.md` §2, density with jaggedness). Step 6 of `docs/WORLDGEN.md`.
+
+**Now:** pure heightmap, no overhangs or arches.
+
+**Change:** a 3D term scaled by B-19's jaggedness, evaluated on the absolute 4×8×4 block lattice only in chunks whose B-20 bounds straddle the surface, trilinear, straight into palette storage; off at LOD ≥ 2.
+
+**Expected (computed):** at most 405 lattice points per surface chunk (9×5×9), against 32,768 voxels.
+
+**Effort:** S–M (shares the lattice and writer with B-11).
+
+**Decided by:** gen µs per surface chunk; uniform-chunk ratio; v2 with caves ≤ 2.0× v1 (target, shared with B-11).
+
+## B-24 Hash-cell decoration
+
+**Origin:** worldgen survey 2026-11 (`other-engines.md` §1, §3, §9: Cubyz structure lists, Veloren `StructureGen2d`). Step 7 of `docs/WORLDGEN.md`.
+
+**Now:** no trees or structures.
+
+**Change:** per feature type, a jittered grid with cell size ≥ the feature's radius; a hash of the cell gives position, kind and seed. A chunk visits the cells within reach, takes the base height from the cached 2D tile and stamps only its own voxels. Beyond LOD 2, a per-column hash probability replaces exact placement.
+
+**Expected:** cross-chunk features with no neighbour access (qualitative).
+
+**Effort:** M. Needs leaf and log block ids and textures.
+
+**Decided by:** zero cut-off trees across chunk borders over 10⁴ chunks; decoration ≤ 10% of v2 world generation (target).
+
+## B-25 Surface rules, biomes and water
+
+**Origin:** worldgen survey 2026-11 (`minecraft.md` §4, `other-engines.md` §9). Step 3 of `docs/WORLDGEN.md`.
+
+**Now:** grass, dirt, stone by depth only. `sand`, `snow` and `snow_side` textures exist (ADR-0014).
+
+**Change:** biome from a precomputed lookup table over quantised climate values (about 9,800 entries, `minecraft.md` §10) instead of an RTree; top and filler blocks by biome, slope (from the height tile's border) and altitude; water below sea level. New block ids follow `docs/TEXTURES.md`.
+
+**Expected:** biomes at per-column cost (qualitative).
+
+**Effort:** S–M.
+
+**Decided by:** v2 world generation ≤ 1.35× v1 (target); screenshots and `vx worldmap` reviewed by Noah.
+
 ---
 
 ## Watch
@@ -305,6 +434,11 @@ Revisit when the stated condition changes.
 - **Sparse 64-trees:** 182.6 Mrays/s on an iGPU, about half ESVO's memory (quoted). A second representation.
 - **Screen-space radiance cascades:** ~2 / 6 / 26 ms at low / medium / high (quoted).
 - **0fps geomorphed POP-buffer LOD:** crack-free without skirts, no numbers; keeps full detail data in memory. Fallback if B-08's border faces show artefacts.
+- **Aquifers and ore veins** (Minecraft 1.18): per-voxel neighbour search below sea level (`docs/research/worldgen-2026-11/minecraft.md` §3). Revisit after B-11 caves exist.
+- **Baked macro atlas from stream-power erosion or Dendry** (Cordonnier 2016, Tzathas 2024, Gaillard 2019): global per tile, needs border handling and an offline step (`erosion-rivers-papers.md` §2–3). Only if B-21 + B-22 fail the visual review.
+- **Terrain Diffusion** (arXiv 2512.08309, 2025): windowed and seed-consistent, but GPU inference with no published latency or weight licence.
+- **GPU compute for the horizon clipmap:** data stays on the GPU, so no readback; not bit-equal to the CPU, so never used for block contents (`noise-performance-lod.md` §6).
+- **C2ME-style density compiler passes** (constant folding, branch elimination, cache elimination): apply as compile-time Rust structure and interval bounds if the v2 stage graph grows.
 - **Distant Horizons column heightfields:** a possible tier beyond ~10 km; separate data model and mesher.
 
 ## Not adopted
@@ -323,6 +457,10 @@ Revisit when the stated condition changes.
 - **GPU world generation:** readback spikes (quoted author complaint).
 - **Lossy VDB brick compression:** lossy, for volume rendering, not faster than a dense texture on 4 of 5 data sets (quoted).
 - **Transvoxel:** marching cubes only; the blocky equivalent is B-08's border faces.
+- **Minecraft's generation-status pyramid and 3×3 feature neighbourhood:** breaks chunk-locality (ADR-0016, ADR-0017); B-24's hash cells replace it.
+- **Runtime erosion simulation** (Mei 2007 GPU hydraulic, particle erosion): global grids or order-dependent droplets (`erosion-rivers-papers.md` §3.4).
+- **simdnoise as the noise authority:** its scalar and SIMD outputs differ (quoted), which changes block heights per machine. `std::simd`: still nightly.
+- **Lochner 2023 diffusion authoring:** tile-based, not seamless.
 - **SGGX-H anisotropic LOD, HROC:** offline microgeometry and irregular-object scenes respectively; no fit for a regular grid.
 
 ## Old ids
