@@ -1,6 +1,8 @@
 # Survey of "best voxel engine" resources (2026-11-03)
 
-Noah's four links, plus the primary sources they point to. Labels: **[quoted]** = stated by the source (URL given), **[measured]** = measured by us (see `docs/PERFORMANCE.md`), **[computed]** = arithmetic from other numbers, **[unverified]** = not checked this session. Proposals derived from this survey are in `docs/PROPOSALS.md`.
+> Snapshot, 2026-11-03. Label mapping to `docs/DOC-GUIDELINES.md`: [quoted] = **quoted**, [measured] = **measured**, [computed] = **computed**, [unverified] = [U]. The proposals it produced (P-01..P-11) are now ranked in `docs/BACKLOG.md`.
+
+Noah's four links, plus the primary sources they point to. Labels: **[quoted]** = stated by the source (URL given), **[measured]** = measured by us (see `docs/PERFORMANCE.md`), **[computed]** = arithmetic from other numbers, **[unverified]** = not checked this session. Proposals derived from this survey are in `docs/BACKLOG.md`.
 
 ## Verdict on the four links
 

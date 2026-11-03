@@ -1,5 +1,7 @@
 # wgpu research (as of 2026-11-03)
 
+> Snapshot, 2026-11-03. Label mapping to `docs/DOC-GUIDELINES.md`: [V] = [S]; [U] unchanged.
+
 Legend: [V]=verified from fetched source/local run, [U]=uncertain/from memory/not verified.
 
 ## 1. Versions and feature status

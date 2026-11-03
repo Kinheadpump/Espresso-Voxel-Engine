@@ -42,7 +42,9 @@ Stats (vx bench-compare, scenario default, <machine>; illustrative values):
 
 ## Memory and docs discipline
 
+All docs follow `docs/DOC-GUIDELINES.md` (where facts live, tone, number labels, ADR and backlog formats).
+
 - Decisions go into `docs/DECISIONS.md` (append a new ADR, never rewrite an accepted one; supersede it).
 - New measurements go into `docs/PERFORMANCE.md` (baseline table) with date, machine and command.
-- Research that took real effort goes into `docs/research/` so nobody repeats it.
+- Research that took real effort goes into `docs/research/` so nobody repeats it; its candidates get ranked entries in `docs/BACKLOG.md`.
 - Keep `docs/ROADMAP.md` current: tick items off, add what you discover.

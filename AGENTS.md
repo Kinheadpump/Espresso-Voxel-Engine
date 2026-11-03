@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Guide for any coding agent (and human) working in this repo. Read this, then `docs/ARCHITECTURE.md`. Claude sessions also read `CLAUDE.md`.
+Guide for any coding agent (and human) working in this repo. Read this, then `docs/ARCHITECTURE.md`. Claude sessions also read `CLAUDE.md`. Anyone writing docs follows `docs/DOC-GUIDELINES.md`.
 
 ## What this is
 
@@ -18,7 +18,7 @@ A performance-first blocky voxel engine in Rust on wgpu. It is the third attempt
 | `tools/legacy-compare` | Standalone crate: Decaf and Lemon meshers vs ours on identical input (not a workspace member) | vx-core, vx-world, vx-mesh |
 | `scripts/` | `bench-baseline.sh` / `.ps1` hardware baseline runs | |
 | `benchmarks/baselines/` | Committed reference runs per machine (`results/` is git-ignored scratch) | |
-| `docs/` | Architecture, decisions (ADRs), roadmap, benchmarking guide, performance log, history, research | |
+| `docs/` | Architecture, decisions (ADRs), roadmap, ranked backlog, benchmarking guide, performance log, history, research. Where each kind of fact lives: `docs/DOC-GUIDELINES.md` §1 | |
 
 Rule: `vx-core`, `vx-world` and `vx-mesh` never depend on wgpu or winit, so CPU benches compile fast and run anywhere.
 
@@ -51,13 +51,13 @@ Headless GPU: install `mesa-vulkan-drivers` (lavapipe). It exposes every feature
 
 ## Workflow for a change
 
-1. Find the roadmap item in `docs/ROADMAP.md`, or add one.
+1. Find the roadmap item in `docs/ROADMAP.md`, or promote one from `docs/BACKLOG.md`, or add one.
 2. If it is a design choice with alternatives, write an ADR in `docs/DECISIONS.md` first (status Proposed), with the measurement that will decide it.
 3. Implement with tests. Hot-path changes need a divan bench or an end-to-end number.
-4. Measure in release before and after with `vx bench` + `vx bench-compare` on the same machine (`docs/BENCHMARKING.md`). Label every number measured / quoted / computed. Record in `docs/PERFORMANCE.md`.
+4. Measure in release before and after with `vx bench` + `vx bench-compare` on the same machine (`docs/BENCHMARKING.md`). Label every number as in `docs/DOC-GUIDELINES.md` §4. Record results in `docs/PERFORMANCE.md`.
 5. `cargo fmt --all && cargo lint && cargo test --workspace`.
 6. Conventional commit with the Stats section (see `CLAUDE.md`).
 
 ## Parallel agents
 
-When splitting work across agents: give each a disjoint crate or doc, a separate `CARGO_TARGET_DIR` if they build concurrently, and require a written report in `docs/research/` (sources linked, uncertain claims marked). The orchestrator reviews and merges conclusions into `docs/DECISIONS.md`.
+When splitting work across agents: give each a disjoint crate or doc, a separate `CARGO_TARGET_DIR` if they build concurrently, and require a written report in `docs/research/` that follows `docs/DOC-GUIDELINES.md` §7 (sources linked, [S]/[U] tags). The orchestrator reviews it, ranks its candidates in `docs/BACKLOG.md` and records decisions in `docs/DECISIONS.md`.

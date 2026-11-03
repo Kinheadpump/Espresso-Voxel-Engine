@@ -1,5 +1,7 @@
 # Storage, compression, generation, streaming: research for Espresso
 
+> Snapshot, 2026-11-03. Tags [S] and [U] and the number labels as in `docs/DOC-GUIDELINES.md` §4. Ranked candidates from this report are in `docs/BACKLOG.md`.
+
 Date: 2026-11-03. Tags: [S] verified from a page I fetched (URL given), [U] unverified / background knowledge.
 Honest note up front: this topic area has little 2024-2026 academic work that fits a blocky 32^3 palette engine. Most usable material is engineering practice from Minecraft-ecosystem projects, a few READMEs with real numbers, and canonical library benchmarks. Several searches returned nothing usable (see end).
 

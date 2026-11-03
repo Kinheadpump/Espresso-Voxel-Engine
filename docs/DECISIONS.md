@@ -1,6 +1,6 @@
 # Architecture decision records
 
-Append-only. Status is Accepted, Proposed (needs the stated measurement), or Superseded by ADR-n.
+Every design choice with alternatives, as append-only ADRs. Status is Proposed (needs the stated measurement), Accepted, Rejected, or Superseded by ADR-n. Format and editing rules: `docs/DOC-GUIDELINES.md` §5. Older ADRs predate that format and stay as written.
 
 ## ADR-0001 New workspace instead of continuing Decaf or Lemon (Accepted, 2026-11-03)
 
