@@ -1,0 +1,12 @@
+baseline : out\base-far.json (6b20c4ec695e)
+candidate: out\cand-far.json (62aa6a68ce5f)
+
+metric (median of repeat medians)    baseline   candidate   change   noise  verdict
+world generation                   609.7ms     270.2ms   -55.7%    4.2%  FASTER
+meshing                            246.8ms     210.0ms   -14.9%    7.7%  FASTER
+upload                              46.5ms      45.7ms    -1.7%    6.1%  within noise
+frame CPU encode                   163.8us     161.8us    -1.2%   14.6%  within noise
+  of which record                   74.0us      73.2us    -1.1%   19.4%  within noise
+  of which submit                   69.0us      67.6us    -2.1%    7.8%  within noise
+frame GPU terrain pass            1778.9us    1793.1us    +0.8%    2.0%  within noise
+frame wall (CPU+GPU, synced)      2219.1us    2231.5us    +0.6%    3.1%  within noise
